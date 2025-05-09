@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://<DB_HOST>:3306/<DB_NAME>?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: <DB_USERNAME>
+    password: <DB_PASSWORD>
+
+  jpa:
+    hibernate:
+      ddl-auto: create  # or update, validate, none
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+
+  jwt:
+    secret: <JWT_SECRET>
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  redis:
+    host: <REDIS_HOST>
+    port: <REDIS_PORT>
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: <MAIL_USERNAME>
+    password: <MAIL_PASSWORD>
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
+  fileSrc: /images/
+  url: http://localhost:8080
+  fileLocate: <LOCAL_FILE_PATH>
+  uriFileLocate: <LOCAL_FILE_URI_PATH>
