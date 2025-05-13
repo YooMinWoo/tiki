@@ -1,5 +1,6 @@
 package com.example.tiki;
 
+import com.example.tiki.init.UserInit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;

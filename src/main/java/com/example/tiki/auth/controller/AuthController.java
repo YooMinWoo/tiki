@@ -33,6 +33,16 @@ public class AuthController {
     private final EmailUtil emailUtil;
     private final RedisService redisService;
 
+    @PostMapping("/email/check")
+    @Operation(summary = "이메일 중복확인",
+            description = "이메일 중복확인 API"
+    )
+    public ResponseEntity<?> checkEmailDuplicate(@RequestParam("email") String email) {
+        authService.checkEmailDuplicate(email);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("사용 가능한 이메일입니다!", null));
+    }
+
+
     @PostMapping("/signup")
     @Operation(summary = "유저 회원가입",
             description = """
@@ -100,7 +110,7 @@ public class AuthController {
                                    HttpServletResponse response) {
         TokenDto tokenDto = authService.login(email, password);
         response.setHeader("Set-Cookie", tokenDto.getRefreshToken());
-        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("로그인 성공!", tokenDto.getAccessToken()));
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("로그인 성공!", tokenDto));
     }
 
     @PreAuthorize("isAuthenticated()")

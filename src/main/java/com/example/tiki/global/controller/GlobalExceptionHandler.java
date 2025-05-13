@@ -26,8 +26,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(ApiResponse.fail(e.getMessage()));
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<?> _404Exception(UserNotFoundException e){
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<?> _403Exception(ForbiddenException e){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN.value()).body(ApiResponse.fail(e.getMessage()));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> _404Exception(NotFoundException e){
         return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(ApiResponse.fail(e.getMessage()));
     }
 
