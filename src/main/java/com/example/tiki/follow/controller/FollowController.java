@@ -2,6 +2,8 @@ package com.example.tiki.follow.controller;
 
 import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.security.user.CustomUserDetails;
+import com.example.tiki.follow.dto.FollowerSummaryDto;
+import com.example.tiki.follow.dto.FollowingSummaryDto;
 import com.example.tiki.follow.service.FollowService;
 import com.example.tiki.global.dto.ApiResponse;
 import com.example.tiki.team.dto.TeamCreateRequestDto;
@@ -14,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -21,6 +25,20 @@ import org.springframework.web.bind.annotation.*;
 public class FollowController {
 
     private final FollowService followService;
+
+    @GetMapping("/users/{userId}/followings")
+    @Operation(summary = "특정 회원의 팔로우한 팀 목록 조회", description = "특정 유저가 팔로우 중인 팀 목록 반환 API")
+    public ResponseEntity<?> getMyFollowings(@PathVariable("userId") Long userId) {
+        List<FollowingSummaryDto> followings = followService.getFollowingList(userId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팔로잉 목록 조회 성공", followings));
+    }
+
+    @GetMapping("/teams/{teamId}/followers")
+    @Operation(summary = "팀의 팔로워 목록 조회", description = "특정 팀을 팔로우 중인 사용자 목록 반환 API")
+    public ResponseEntity<?> getTeamFollowers(@PathVariable("teamId") Long teamId) {
+        List<FollowerSummaryDto> followers = followService.getFollowerList(teamId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팔로워 목록 조회 성공", followers));
+    }
 
     @PostMapping("/teams/{teamId}/follow")
     @PreAuthorize("hasRole('ROLE_USER')")

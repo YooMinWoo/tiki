@@ -29,4 +29,7 @@ public class Notification {
     @Column(updatable = false)
     private LocalDateTime createdDate;
 
+    public void markAsRead(){
+        isRead = true;
+    }
 }

@@ -20,7 +20,7 @@ public class UserInit {
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @PostConstruct
+//    @PostConstruct
     @Transactional
     public void userSignup(){
         User user1 = User.builder()
