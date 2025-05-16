@@ -1,6 +1,9 @@
 package com.example.tiki.notifircation.dto;
 
+import com.example.tiki.notifircation.domain.NotificationType;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +21,10 @@ public class NotificationDto {
     private Long notificationId;
 
     private String message;
-    private boolean isRead = false;
+    private boolean isRead;
+    private NotificationType notificationType;
+    private Long targetId;
+    private String redirectUrl;
     private LocalDateTime createdDate;
+
 }

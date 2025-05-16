@@ -56,7 +56,7 @@ public class TeamController {
     public ResponseEntity<?> teamJoinRequest(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                         @PathVariable("teamId") Long teamId){
         User user = customUserDetails.getUser();
-        teamService.teamJoinRequest(user.getId(), teamId);
+        teamService.teamJoinRequest(user, teamId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 가입 ok", null));
     }
 

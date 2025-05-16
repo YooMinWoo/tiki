@@ -29,4 +29,8 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
                 AND tu.team_role IN (:teamRoles)
     """, nativeQuery = true)
     List<TeamUser> findAllByTeamIdAndTeamRoleIn(@Param("teamId") Long teamId, @Param("teamRoles") List<String> teamRoles);
+
+    @Query("SELECT tu.userId FROM TeamUser tu WHERE tu.teamId = :teamId AND tu.teamRole = 'ROLE_LEADER'")
+    Optional<Long> findLeaderUserIdByTeamId(@Param("teamId") Long teamId);
+
 }

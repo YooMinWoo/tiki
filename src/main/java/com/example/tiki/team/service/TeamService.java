@@ -5,6 +5,9 @@ import com.example.tiki.auth.repository.AuthRepository;
 import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.global.exception.TeamApplicationException;
+import com.example.tiki.notifircation.domain.Notification;
+import com.example.tiki.notifircation.domain.NotificationType;
+import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.team.domain.Team;
 import com.example.tiki.team.domain.TeamRole;
 import com.example.tiki.team.domain.TeamStatus;
@@ -31,6 +34,7 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final TeamUserRepository teamUserRepository;
     private final AuthRepository authRepository;
+    private final NotificationRepository notificationRepository;
 
     // 전체 팀 조회
     public List<TeamDto> findTeamList() {
@@ -63,7 +67,7 @@ public class TeamService {
 
     // 팀 가입 요청
     @Transactional
-    public TeamUser teamJoinRequest(Long userId, Long teamId){
+    public TeamUser teamJoinRequest(User user, Long teamId){
         Team team = teamRepository.findById(teamId).
                 orElseThrow(() -> new NotFoundException("존재하지 않는 팀입니다."));
 
@@ -71,11 +75,22 @@ public class TeamService {
             throw new TeamApplicationException("해당 팀은 모집이 만료되었습니다.");
         }
 
-        TeamUser teamUser = teamUserRepository.findLatestByUserIdAndTeamId(userId, teamId).orElse(null);
+        TeamUser teamUser = teamUserRepository.findLatestByUserIdAndTeamId(user.getId(), teamId).orElse(null);
 
         if(teamUser == null || teamUser.getTeamRole() == TeamRole.ROLE_INIT){
+            Long leaderId = teamUserRepository.findLeaderUserIdByTeamId(teamId)
+                    .orElseThrow(() -> new NotFoundException("에러가 발생하였습니다."));
+
+            notificationRepository.save(
+                    Notification.builder()
+                            .userId(leaderId)
+                            .message(user.getName()+"님께서 가입 요청을 보냈습니다.")
+                            .notificationType(NotificationType.JOIN)
+                            .targetId(user.getId())
+                            .build()
+            );
             return teamUserRepository.save(TeamUser.builder()
-                    .userId(userId)
+                    .userId(user.getId())
                     .teamId(teamId)
                     .teamRole(TeamRole.ROLE_WAITING)
                     .build());
@@ -97,13 +112,25 @@ public class TeamService {
     // 승인
     @Transactional
     public void approveTeamJoinRequest(Long leaderId, Long userId, Long teamId){
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
+
         validateLeaderAuthority(leaderId, teamId);
 
         TeamUser teamUser = getLatestTeamUserOrThrow(userId, teamId, "대기 중인 내역이 없습니다.");
 
         if(teamUser.getTeamRole() != TeamRole.ROLE_WAITING){
-            throw new TeamApplicationException("승인할 수 없습니다.");
+            throw new TeamApplicationException("수락할 수 없습니다.");
         }
+
+        notificationRepository.save(
+                Notification.builder()
+                        .userId(userId)
+                        .message(team.getTeamName()+"팀에서 가입을 수락했습니다.")
+                        .notificationType(NotificationType.APPROVE)
+                        .targetId(teamId)
+                        .build()
+        );
 
         teamUserRepository.save(
                 TeamUser.builder()
@@ -118,13 +145,25 @@ public class TeamService {
     // 거절
     @Transactional
     public void rejectTeamJoinRequest(Long leaderId, Long userId, Long teamId){
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
+
         validateLeaderAuthority(leaderId, teamId);
 
         TeamUser teamUser = getLatestTeamUserOrThrow(userId, teamId, "대기 중인 내역이 없습니다.");
 
-        if(teamUser.getTeamRole() == TeamRole.ROLE_WAITING){
+        if(teamUser.getTeamRole() != TeamRole.ROLE_WAITING){
             throw new TeamApplicationException("거절할 수 없습니다.");
         }
+
+        notificationRepository.save(
+                Notification.builder()
+                        .userId(userId)
+                        .message(team.getTeamName()+"팀에서 가입을 거절했습니다.")
+                        .notificationType(NotificationType.REJECT)
+                        .targetId(teamId)
+                        .build()
+        );
 
         teamUserRepository.save(
                 TeamUser.builder()
@@ -226,6 +265,7 @@ public class TeamService {
                 .collect(Collectors.toList());
     }
 
+    // 권한이 리더인지 확인
     private void validateLeaderAuthority(Long userId, Long teamId) {
         teamUserRepository.findLatestByUserIdAndTeamId(userId, teamId)
                 .filter(tu -> tu.getTeamRole() == TeamRole.ROLE_LEADER)

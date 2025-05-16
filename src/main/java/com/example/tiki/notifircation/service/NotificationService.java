@@ -3,6 +3,7 @@ package com.example.tiki.notifircation.service;
 import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.notifircation.domain.Notification;
+import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.dto.NotificationDto;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,9 @@ public class NotificationService {
                         .notificationId(notification.getId())
                         .message(notification.getMessage())
                         .isRead(notification.isRead())
+                        .targetId(notification.getTargetId())
+                        .notificationType(notification.getNotificationType())
+                        .redirectUrl(getRedirectUrl(notification.getNotificationType(), notification.getTargetId()))
                         .createdDate(notification.getCreatedDate())
                         .build())
                 .collect(Collectors.toList());
@@ -45,5 +49,16 @@ public class NotificationService {
         if(notification.getUserId() != userId) throw new ForbiddenException("알림 읽음처리는 본인만 할 수 있습니다.");
 
         notification.markAsRead();
+    }
+
+    public String getRedirectUrl(NotificationType type, Long targetId){
+
+        return switch (type) {
+            case MATCH -> "/api/matches/" + targetId;
+            case RECRUIT -> "/api/recruits/" + targetId;
+            case FOLLOW, LEFT -> "/api/users/" + targetId;
+            case APPROVE, REJECT, KICK -> "/api/teams/" + targetId;
+            case JOIN -> "/api/teams/"+targetId+"/join-request/waiting";
+        };
     }
 }
