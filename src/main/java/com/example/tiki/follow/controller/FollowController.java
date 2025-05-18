@@ -48,7 +48,7 @@ public class FollowController {
     public ResponseEntity<?> follow(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                     @PathVariable("teamId") Long teamId){
         User user = customUserDetails.getUser();
-        followService.follow(user.getId(), teamId);
+        followService.follow(user, teamId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팔로우/언팔로우 (토글) ok", null));
     }
 }

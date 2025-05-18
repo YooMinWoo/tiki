@@ -7,8 +7,12 @@ import com.example.tiki.follow.dto.FollowerSummaryDto;
 import com.example.tiki.follow.dto.FollowingSummaryDto;
 import com.example.tiki.follow.repository.FollowRepository;
 import com.example.tiki.global.exception.NotFoundException;
+import com.example.tiki.notifircation.domain.Notification;
+import com.example.tiki.notifircation.domain.NotificationType;
+import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.team.domain.Team;
 import com.example.tiki.team.repository.TeamRepository;
+import com.example.tiki.team.repository.TeamUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +28,8 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final TeamRepository teamRepository;
     private final AuthRepository authRepository;
+    private final NotificationRepository notificationRepository;
+    private final TeamUserRepository teamUserRepository;
 
 
     // 팔로워 조회
@@ -105,19 +111,28 @@ public class FollowService {
 
     // 팔로우/언팔로우 기능(토글)
     @Transactional
-    public void follow(Long userId, Long teamId){
+    public void follow(User user, Long teamId){
 //        authRepository.findById(userId).orElseThrow(() -> new NotFoundException("계정 정보를 불러오는 중 에러가 발생하였습니다."));
         teamRepository.findById(teamId).orElseThrow(() -> new NotFoundException("존재하지 않는 팀입니다."));
 
-        followRepository.findByUserIdAndTeamId(userId, teamId).ifPresentOrElse(
+        followRepository.findByUserIdAndTeamId(user.getId(), teamId).ifPresentOrElse(
                 // 언팔로우
                 followRepository::delete,
 
                 // 팔로우
                 () -> {
+                    Long leaderId = teamUserRepository.findLeaderId(teamId);
                     // 알림 기능 추가하기
+                    notificationRepository.save(
+                            Notification.builder()
+                                    .userId(leaderId)
+                                    .message(user.getName()+"님께서 가입 요청을 보냈습니다.")
+                                    .notificationType(NotificationType.JOIN)
+                                    .targetId(user.getId())
+                                    .build()
+                    );
                     followRepository.save(Follow.builder()
-                            .userId(userId)
+                            .userId(user.getId())
                             .teamId(teamId)
                             .build());
                 }

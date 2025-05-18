@@ -33,4 +33,16 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
     @Query("SELECT tu.userId FROM TeamUser tu WHERE tu.teamId = :teamId AND tu.teamRole = 'ROLE_LEADER'")
     Optional<Long> findLeaderUserIdByTeamId(@Param("teamId") Long teamId);
 
+    @Query("""
+        select tu.userId
+        from TeamUser tu
+        where tu.teamRole = 'ROLE_LEADER'
+          and tu.teamId = :teamId
+          and tu.id = (
+              select max(subTu.id)
+              from TeamUser subTu
+              where subTu.teamRole = 'ROLE_LEADER' and subTu.teamId = :teamId
+          )
+    """)
+    Long findLeaderId(@Param("teamId") Long teamId);
 }
