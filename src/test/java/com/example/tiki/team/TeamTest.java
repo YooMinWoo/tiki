@@ -140,4 +140,25 @@ class TeamTest {
         }
 
     }
+
+    @Test
+    void 팀_탈퇴(){
+        // 가입신청
+        teamService.teamJoinRequest(member, team.getId());
+
+        // 가입수락
+        teamService.rejectTeamJoinRequest(leader.getId(), member.getId(), team.getId()); //Long leaderId, Long userId, Long teamId
+
+        // 팀 탈퇴
+        teamService.leaveTeam(member, team.getId());
+
+//        for(teamUserRepository.)
+
+        // 결과
+        for (NotificationDto dto : notificationService.getNotification(member.getId())) {
+            assertEquals(dto.getMessage(), "푸에르 FC팀에서 가입을 거절했습니다.");
+            assertEquals(dto.getTargetId(), team.getId());
+        }
+
+    }
 }

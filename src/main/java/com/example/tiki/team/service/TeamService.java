@@ -182,11 +182,23 @@ public class TeamService {
 
         TeamUser teamUser = getLatestTeamUserOrThrow(userId, teamId, "해당 팀 회원이 아닙니다.");
 
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
+
         Set<TeamRole> kickableRoles = Set.of(TeamRole.ROLE_MANAGER, TeamRole.ROLE_MEMBER);
 
         if(!kickableRoles.contains(teamUser.getTeamRole())){
             throw new TeamApplicationException("방출할 수 없습니다.");
         }
+
+        notificationRepository.save(
+                Notification.builder()
+                        .userId(leaderId)
+                        .message(team.getTeamName()+"팀에서 방출 당했습니다.")
+                        .notificationType(NotificationType.KICK)
+                        .targetId(teamId)
+                        .build()
+        );
 
         teamUserRepository.save(
                 TeamUser.builder()
@@ -199,12 +211,14 @@ public class TeamService {
 
     // 탈퇴
     @Transactional
-    public void leaveTeam(Long userId, Long teamId){
-        TeamUser teamUser = getLatestTeamUserOrThrow(userId, teamId, "해당 팀이 아닙니다.");
+    public void leaveTeam(User user, Long teamId){
+        TeamUser teamUser = getLatestTeamUserOrThrow(user.getId(), teamId, "해당 팀이 아닙니다.");
 
         if(teamUser.getTeamRole() == TeamRole.ROLE_LEADER){
             throw new TeamApplicationException("감독을 다른 사람에게 위임한 뒤 탈퇴하여 주세요.");
         }
+
+        Long leaderId = teamUserRepository.findLeaderId(teamId);
 
         Set<TeamRole> allowedToLeave = Set.of(TeamRole.ROLE_MANAGER, TeamRole.ROLE_MEMBER);
 
@@ -212,9 +226,19 @@ public class TeamService {
             throw new TeamApplicationException("해당 팀이 아닙니다.");
         }
 
+        // 리더에게 특정 회원이 탈퇴했다고 알림 전송
+        notificationRepository.save(
+                Notification.builder()
+                        .userId(leaderId)
+                        .message(user.getName()+"("+user.getEmail()+")님께서 탈퇴했습니다.")
+                        .notificationType(NotificationType.LEFT)
+                        .targetId(teamId)
+                        .build()
+        );
+
         teamUserRepository.save(
                 TeamUser.builder()
-                        .userId(userId)
+                        .userId(user.getId())
                         .teamId(teamId)
                         .teamRole(TeamRole.ROLE_LEFT)
                         .build()

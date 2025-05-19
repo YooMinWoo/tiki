@@ -13,9 +13,11 @@ import java.util.Optional;
 @Repository
 public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
 
+    // 특정 유저의 현재 상태
     @Query("SELECT tu FROM TeamUser tu WHERE tu.userId = :userId AND tu.teamId = :teamId ORDER BY tu.id DESC limit 1")
     Optional<TeamUser> findLatestByUserIdAndTeamId(@Param("userId") Long userId, @Param("teamId") Long teamId);
 
+    // 특정 role에 해당하는 모든 팀원 조회
     @Query(value = """
             SELECT tu.*
               FROM team_user tu
@@ -30,9 +32,11 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
     """, nativeQuery = true)
     List<TeamUser> findAllByTeamIdAndTeamRoleIn(@Param("teamId") Long teamId, @Param("teamRoles") List<String> teamRoles);
 
+    //
     @Query("SELECT tu.userId FROM TeamUser tu WHERE tu.teamId = :teamId AND tu.teamRole = 'ROLE_LEADER'")
     Optional<Long> findLeaderUserIdByTeamId(@Param("teamId") Long teamId);
 
+    // 리더 확인
     @Query("""
         select tu.userId
         from TeamUser tu

@@ -108,7 +108,7 @@ public class TeamController {
     public ResponseEntity<?> leaveTeam(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                               @PathVariable("teamId") Long teamId){
         User user = customUserDetails.getUser();
-        teamService.leaveTeam(user.getId(), teamId);
+        teamService.leaveTeam(user, teamId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 탈퇴 ok", null));
     }
 
