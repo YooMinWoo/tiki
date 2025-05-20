@@ -30,8 +30,14 @@ public class TeamUser extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TeamUserStatus teamUserStatus;
 
+    private LocalDateTime joinedAt;
+
     // 상태 변경
     public void changeStatus(TeamUserStatus teamUserStatus){
+        switch (teamUserStatus){
+            case APPROVED ->  joinedAt = LocalDateTime.now();
+        }
         this.teamUserStatus = teamUserStatus;
     }
+
 }

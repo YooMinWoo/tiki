@@ -8,10 +8,7 @@ import com.example.tiki.follow.dto.FollowingSummaryDto;
 import com.example.tiki.follow.service.FollowService;
 import com.example.tiki.notifircation.dto.NotificationDto;
 import com.example.tiki.notifircation.service.NotificationService;
-import com.example.tiki.team.domain.Team;
-import com.example.tiki.team.domain.TeamRole;
-import com.example.tiki.team.domain.TeamStatus;
-import com.example.tiki.team.domain.TeamUser;
+import com.example.tiki.team.domain.*;
 import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.team.repository.TeamUserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +73,7 @@ public class FollowTest {
         teamUser = teamUserRepository.save(TeamUser.builder()
                 .userId(leader.getId())
                 .teamId(team.getId())
-                .teamRole(TeamRole.ROLE_LEADER)
+                .teamUserRole(TeamUserRole.ROLE_LEADER)
                 .build());
     }
 

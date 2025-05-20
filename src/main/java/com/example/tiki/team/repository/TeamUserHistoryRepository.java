@@ -12,5 +12,5 @@ import java.util.Optional;
 
 @Repository
 public interface TeamUserHistoryRepository extends JpaRepository<TeamUserHistory, Long> {
-
+    void deleteAllByTeamUserId(Long teamUserId);
 }

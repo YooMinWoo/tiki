@@ -1,5 +1,6 @@
 package com.example.tiki.team.domain;
 
+import com.example.tiki.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,11 +12,13 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class TeamUserHistory {
+public class TeamUserHistory extends BaseEntity {
     @Id
     @GeneratedValue
     @Column(name = "team_user_history_id")
     private Long id;
+
+    private Long teamUserId;
 
     private Long userId;
     private Long teamId;

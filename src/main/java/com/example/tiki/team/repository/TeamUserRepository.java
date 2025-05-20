@@ -15,46 +15,11 @@ import java.util.Optional;
 @Repository
 public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
 
-    // 특정 유저의 현재 상태
-    @Query("SELECT tu FROM TeamUser tu WHERE tu.userId = :userId AND tu.teamId = :teamId ORDER BY tu.id DESC limit 1")
-    Optional<TeamUser> findLatestByUserIdAndTeamId(@Param("userId") Long userId, @Param("teamId") Long teamId);
-
-    // 특정 role에 해당하는 모든 팀원 조회
-    @Query(value = """
-            SELECT tu.*
-              FROM team_user tu
-              JOIN (
-                  SELECT user_id, MAX(team_user_id) AS latest_id
-                  FROM team_user
-                  WHERE team_id = :teamId
-                  GROUP BY user_id
-              ) latest ON tu.team_user_id = latest.latest_id
-              WHERE tu.team_id = :teamId
-                AND tu.team_role IN (:teamRoles)
-    """, nativeQuery = true)
-    List<TeamUser> findAllByTeamIdAndTeamRoleIn(@Param("teamId") Long teamId, @Param("teamRoles") List<String> teamRoles);
-
-    //
-    @Query("SELECT tu.userId FROM TeamUser tu WHERE tu.teamId = :teamId AND tu.teamRole = 'ROLE_LEADER'")
-    Optional<Long> findLeaderUserIdByTeamId(@Param("teamId") Long teamId);
-
-    // 리더 확인
-    @Query("""
-        select tu.userId
-        from TeamUser tu
-        where tu.teamRole = 'ROLE_LEADER'
-          and tu.teamId = :teamId
-          and tu.id = (
-              select max(subTu.id)
-              from TeamUser subTu
-              where subTu.teamRole = 'ROLE_LEADER' and subTu.teamId = :teamId
-          )
-    """)
-    Long findLeaderId(@Param("teamId") Long teamId);
-
     Optional<TeamUser> findByUserIdAndTeamId(Long userId, Long teamId);
 
     TeamUser findByTeamIdAndTeamUserRole(Long teamId, TeamUserRole teamUserRole);
 
     Optional<TeamUser> findByUserIdAndTeamIdAndTeamUserStatus(Long userId, Long teamId, TeamUserStatus teamUserStatus);
+
+    List<TeamUser> findAllByTeamIdAndTeamUserStatus(Long teamId, TeamUserStatus teamUserStatus);
 }

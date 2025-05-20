@@ -11,6 +11,8 @@ import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.team.domain.Team;
+import com.example.tiki.team.domain.TeamUser;
+import com.example.tiki.team.domain.TeamUserRole;
 import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.team.repository.TeamUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -121,11 +123,11 @@ public class FollowService {
 
                 // 팔로우
                 () -> {
-                    Long leaderId = teamUserRepository.findLeaderId(teamId);
+                    TeamUser leader = teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER);
                     // 알림 기능 추가하기
                     notificationRepository.save(
                             Notification.builder()
-                                    .userId(leaderId)
+                                    .userId(leader.getUserId())
                                     .message(user.getName()+"님께서 가입 요청을 보냈습니다.")
                                     .notificationType(NotificationType.JOIN)
                                     .targetId(user.getId())

@@ -66,6 +66,7 @@ public class TeamService {
 
         // history 저장
         TeamUserHistory teamUserHistory = TeamUserHistory.builder()
+                .teamUserId(teamUser.getId())
                 .userId(userId)
                 .teamId(team.getId())
                 .previousRole(null)
@@ -110,10 +111,14 @@ public class TeamService {
                 .teamUserStatus(TeamUserStatus.WAITING)
                 .build();
 
+        teamUserRepository.save(teamUser);
+
+        // 감독 id 가져오기
         TeamUser leaderTeamUser = teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER);
 
         // history 저장
         TeamUserHistory teamUserHistory = TeamUserHistory.builder()
+                .teamUserId(teamUser.getId())
                 .userId(user.getId())
                 .teamId(team.getId())
                 .previousRole(null)
@@ -124,14 +129,14 @@ public class TeamService {
 
         teamUserHistoryRepository.save(teamUserHistory);
 
-        Notification.builder()
+        notificationRepository.save(Notification.builder()
                 .userId(leaderTeamUser.getUserId())
                 .message(user.getId() + "(" + user.getEmail() + ")님께서 가입 요청을 보냈습니다.")
                 .notificationType(NotificationType.JOIN)
                 .targetId(user.getId())
-                .build();
+                .build());
 
-        return teamUserRepository.save(teamUser);
+        return teamUser;
     }
 
     // 승인/거절/방출
@@ -201,9 +206,31 @@ public class TeamService {
                         .targetId(user.getId())
                         .build()
         );
-
     }
 
+    // 가입 요청 취소
+    @Transactional
+    public void cancelJoinRequest(Long userId, Long teamId) {
+        // 취소가 가능한 waiting인 TeamUser의 TeamUserHistory는 1개밖에 없을 것이다.
+        TeamUser teamUser = getTeamUserWithStatus(userId, teamId, TeamUserStatus.WAITING);
+        teamUserRepository.delete(teamUser);
+
+        teamUserHistoryRepository.deleteAllByTeamUserId(teamUser.getId());
+    }
+
+    // 승인 대기 리스트
+    public List<TeamUserSimpleResponse> getWaitingJoinRequests(Long userId, Long teamId){
+        validateLeaderAuthority(userId, teamId);
+        List<TeamUser> teamUsers = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamId, TeamUserStatus.WAITING);
+
+        return convertToSimpleResponses(teamUsers);
+    }
+
+    // 회원 리스트
+    public List<TeamUserSimpleResponse> getTeamUsers(Long userId, Long teamId){
+        List<TeamUser> teamUsers = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamId, TeamUserStatus.APPROVED);
+        return convertToSimpleResponses(teamUsers);
+    }
 
     // 현재 처리 상태 확인
     private TeamUser getTargetTeamUser(Long userId, Long teamId, TeamUserStatus targetStatus) {
@@ -246,6 +273,7 @@ public class TeamService {
     // 이력 저장
     private void saveHistory(TeamUser teamUser, TeamUserRole previousRole, TeamUserStatus previousStatus) {
         teamUserHistoryRepository.save(TeamUserHistory.builder()
+                .teamUserId(teamUser.getId())
                 .userId(teamUser.getUserId())
                 .teamId(teamUser.getTeamId())
                 .previousRole(previousRole)
@@ -275,194 +303,15 @@ public class TeamService {
                 .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
     }
 
-
-//    // 승인
-//    @Transactional
-//    public void approveTeamJoinRequest(Long leaderId, Long userId, Long teamId){
-//        // 팀 존재 확인
-//        Team team = teamRepository.findById(teamId)
-//                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
-//
-//        // 리더 확인
-//        if(leaderId != teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER).getUserId()){
-//            throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
-//        }
-//
-//        // 대기 확인
-//        TeamUser teamUser = teamUserRepository.findByUserIdAndTeamIdAndTeamUserStatus(userId, teamId, TeamUserStatus.WAITING)
-//                .orElseThrow(() -> new ForbiddenException("대기 중인 내역이 없습니다."));
-//
-//        // 상태 변경 ( 대기 -> 승인 )
-//        teamUser.changeStatus(TeamUserStatus.APPROVED);
-//
-//        // history 저장
-//        TeamUserHistory teamUserHistory = TeamUserHistory.builder()
-//                .userId(userId)
-//                .teamId(team.getId())
-//                .previousRole(null)
-//                .currentRole(TeamUserRole.ROLE_MEMBER)
-//                .previousStatus(TeamUserStatus.WAITING)
-//                .currentStatus(TeamUserStatus.APPROVED)
-//                .build();
-//
-//        teamUserHistoryRepository.save(teamUserHistory);
-//
-//        // 알림 발송
-//        notificationRepository.save(
-//                Notification.builder()
-//                        .userId(userId)
-//                        .message(team.getTeamName()+"팀에서 가입을 수락했습니다.")
-//                        .notificationType(NotificationType.APPROVE)
-//                        .targetId(teamId)
-//                        .build()
-//        );
-//
-//    }
-//
-//    // 거절
-//    @Transactional
-//    public void rejectTeamJoinRequest(Long leaderId, Long userId, Long teamId){
-//        // 팀 존재 확인
-//        Team team = teamRepository.findById(teamId)
-//                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
-//
-//        // 리더 확인
-//        if(leaderId != teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER).getUserId()){
-//            throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
-//        }
-//
-//        // 대기 확인
-//        TeamUser teamUser = teamUserRepository.findByUserIdAndTeamIdAndTeamUserStatus(userId, teamId, TeamUserStatus.WAITING)
-//                .orElseThrow(() -> new ForbiddenException("대기 중인 내역이 없습니다."));
-//
-//        // 상태 변경 ( 대기 -> 거절 )
-//        teamUser.changeStatus(TeamUserStatus.REJECTED);
-//
-//        // history 저장
-//        TeamUserHistory teamUserHistory = TeamUserHistory.builder()
-//                .userId(userId)
-//                .teamId(team.getId())
-//                .previousRole(null)
-//                .currentRole(null)
-//                .previousStatus(TeamUserStatus.WAITING)
-//                .currentStatus(TeamUserStatus.REJECTED)
-//                .build();
-//
-//        teamUserHistoryRepository.save(teamUserHistory);
-//
-//        // 알림 발송
-//        notificationRepository.save(
-//                Notification.builder()
-//                        .userId(userId)
-//                        .message(team.getTeamName()+"팀에서 가입을 거절했습니다.")
-//                        .notificationType(NotificationType.REJECT)
-//                        .targetId(teamId)
-//                        .build()
-//        );
-//
-//    }
-//
-//    // 방출
-//    @Transactional
-//    public void kickUserFromTeam(Long leaderId, Long userId, Long teamId){
-//        // 팀 존재 확인
-//        Team team = teamRepository.findById(teamId)
-//                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
-//
-//        // 리더 확인
-//        if(leaderId != teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER).getUserId()){
-//            throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
-//        }
-//
-//        // 권한 확인
-//        TeamUser teamUser = teamUserRepository.findByUserIdAndTeamIdAndTeamUserStatus(userId, teamId, TeamUserStatus.APPROVED)
-//                .orElseThrow(() -> new ForbiddenException("가입된 팀원이 아닙니다."));
-//
-//        if(teamUser.getTeamUserRole() == TeamUserRole.ROLE_MEMBER || teamUser.getTeamUserRole() == TeamUserRole.ROLE_MANAGER){
-//
-//            // 알림 발송
-//            notificationRepository.save(
-//                    Notification.builder()
-//                            .userId(userId)
-//                            .message(team.getTeamName()+"팀에서 방출 당했습니다.")
-//                            .notificationType(NotificationType.KICK)
-//                            .targetId(teamId)
-//                            .build()
-//            );
-//
-//            // 방출 처리
-//            teamUser.changeStatus(TeamUserStatus.KICKED);
-//
-//            // history 저장
-//            TeamUserHistory teamUserHistory = TeamUserHistory.builder()
-//                    .userId(userId)
-//                    .teamId(team.getId())
-//                    .previousRole(null)
-//                    .currentRole(TeamUserRole.ROLE_MEMBER)
-//                    .previousStatus(null)
-//                    .currentStatus(TeamUserStatus.WAITING)
-//                    .build();
-//
-//            teamUserHistoryRepository.save(teamUserHistory);
-//        }
-//
-//        throw new TeamApplicationException("방출할 수 없습니다.");
-//
-//    }
-
-    // 가입 요청 취소
-    @Transactional
-    public void cancelJoinRequest(Long userId, Long teamId) {
-        TeamUser teamUser = getLatestTeamUserOrThrow(userId, teamId, "가입 요청 내역이 없습니다.");
-
-        if (teamUser.getTeamRole() != TeamRole.ROLE_WAITING) {
-            throw new TeamApplicationException("현재 상태에서는 요청을 취소할 수 없습니다.");
-        }
-
-        teamUserRepository.delete(teamUser);
-    }
-
-    // 승인 대기 리스트
-    public List<TeamUserSimpleResponse> getWaitingJoinRequests(Long userId, Long teamId){
-        validateLeaderAuthority(userId, teamId);
-        List<String> waitingRoles = List.of(
-                TeamRole.ROLE_WAITING.name()
-        );
-
-        return convertToSimpleResponses(teamId, waitingRoles);
-    }
-
-    // 회원 리스트
-    public List<TeamUserSimpleResponse> getTeamUsers(Long userId, Long teamId){
-        List<String> activeRoles = List.of(
-                TeamRole.ROLE_LEADER.name(),
-                TeamRole.ROLE_MEMBER.name(),
-                TeamRole.ROLE_MANAGER.name()
-        );
-        
-        return convertToSimpleResponses(teamId, activeRoles);
-    }
-
-    private List<TeamUserSimpleResponse> convertToSimpleResponses(Long teamId, List<String> teamRoles) {
-        List<TeamUser> teamUsers = teamUserRepository.findAllByTeamIdAndTeamRoleIn(teamId, teamRoles);
+    // List<TeamUser> -> List<TeamUserSimpleResponse>
+    private List<TeamUserSimpleResponse> convertToSimpleResponses(List<TeamUser> teamUsers) {
         return teamUsers.stream()
                 .map(teamUser -> {
                     User user = authRepository.findById(teamUser.getUserId())
-                            .orElseThrow(() -> new NotFoundException("존재하지 않는 유저입니다."));
+                            .orElseThrow(() -> new NotFoundException("유저를 불러오는 중 에러가 발생하였습니다."));
                     return TeamUserSimpleResponse.from(user, teamUser);
                 })
                 .collect(Collectors.toList());
     }
 
-    // 권한이 리더인지 확인
-//    private void validateLeaderAuthority(Long userId, Long teamId) {
-//        teamUserRepository.findLatestByUserIdAndTeamId(userId, teamId)
-//                .filter(tu -> tu.getTeamRole() == TeamRole.ROLE_LEADER)
-//                .orElseThrow(() -> new ForbiddenException("해당 작업을 수행할 권한이 없습니다."));
-//    }
-
-//    private TeamUser getLatestTeamUserOrThrow(Long userId, Long teamId, String message) {
-//        return teamUserRepository.findLatestByUserIdAndTeamId(userId, teamId)
-//                .orElseThrow(() -> new TeamApplicationException(message));
-//    }
 }
