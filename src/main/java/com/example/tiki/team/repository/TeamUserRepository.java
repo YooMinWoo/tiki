@@ -2,6 +2,8 @@ package com.example.tiki.team.repository;
 
 import com.example.tiki.team.domain.TeamRole;
 import com.example.tiki.team.domain.TeamUser;
+import com.example.tiki.team.domain.TeamUserRole;
+import com.example.tiki.team.domain.TeamUserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -49,4 +51,10 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
           )
     """)
     Long findLeaderId(@Param("teamId") Long teamId);
+
+    Optional<TeamUser> findByUserIdAndTeamId(Long userId, Long teamId);
+
+    TeamUser findByTeamIdAndTeamUserRole(Long teamId, TeamUserRole teamUserRole);
+
+    Optional<TeamUser> findByUserIdAndTeamIdAndTeamUserStatus(Long userId, Long teamId, TeamUserStatus teamUserStatus);
 }

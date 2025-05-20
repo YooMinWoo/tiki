@@ -8,5 +8,5 @@ public enum TeamRole {
     ROLE_REJECTED,  // 승인 거절
     ROLE_KICKED,    // 방출
     ROLE_LEFT,       // 자발적 탈퇴
-    ROLE_INIT       // 초기화 (거절,방출,탈퇴) -> 초기화
+//    ROLE_INIT       // 초기화 (거절,방출,탈퇴) -> 초기화
 }

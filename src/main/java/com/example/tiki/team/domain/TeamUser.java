@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class TeamUser {
+public class TeamUser extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -26,9 +25,13 @@ public class TeamUser {
     private Long teamId;
 
     @Enumerated(EnumType.STRING)
-    private TeamRole teamRole;
+    private TeamUserRole teamUserRole;
 
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdDate;
+    @Enumerated(EnumType.STRING)
+    private TeamUserStatus teamUserStatus;
+
+    // 상태 변경
+    public void changeStatus(TeamUserStatus teamUserStatus){
+        this.teamUserStatus = teamUserStatus;
+    }
 }
