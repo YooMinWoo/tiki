@@ -6,5 +6,5 @@ public enum TeamUserStatus {
     REJECTED,  // 승인 거절
     KICKED,    // 방출
     LEFT,       // 자발적 탈퇴
-//    INIT       // 초기화 (거절,방출,탈퇴) -> 초기화
+    DISBANDED       // 팀 해체
 }

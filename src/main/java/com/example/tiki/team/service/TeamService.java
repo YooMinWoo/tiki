@@ -39,4 +39,8 @@ public interface TeamService {
 
     // 회원 리스트
     List<TeamUserSimpleResponse> getTeamUsers(Long userId, Long teamId);
+
+    // 팀 해체
+    void disbandTeam(Long userId, Long teamId);
+
 }

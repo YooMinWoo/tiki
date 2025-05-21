@@ -38,6 +38,36 @@ public class TeamServiceImpl implements TeamService {
     private final AuthRepository authRepository;
     private final NotificationRepository notificationRepository;
 
+    // 팀 해체
+    @Transactional
+    public void disbandTeam(Long userId, Long teamId) {
+        // 리더인지 확인
+        validateLeaderAuthority(userId, teamId);
+
+        // 팀 상태 변경 -> disband
+        Team team = getOrElseThrow(teamId);
+        team.changeStatus(TeamStatus.DISBANDED);
+
+        List<TeamUserStatus> teamUserStatuses = List.of(TeamUserStatus.APPROVED, TeamUserStatus.WAITING);
+
+        // 팀원들 조회 (approved)
+        List<TeamUser> approvedAndWaitingTeamUsers = teamUserRepository.findByTeamIdAndTeamUserStatusIn(teamId, teamUserStatuses);
+
+        for (TeamUser teamUser : approvedAndWaitingTeamUsers) {
+            TeamUserRole previousRole = teamUser.getTeamUserRole();
+            TeamUserStatus previousStatus = teamUser.getTeamUserStatus();
+
+            // 팀원들의 상태를 disbanded로 변경
+            teamUser.changeStatus(TeamUserStatus.DISBANDED);
+
+            // 팀이 해체되었다고 알림 전송
+            sendNotification(teamUser.getUserId(), team.getTeamName(), TeamUserStatus.DISBANDED, teamId);
+
+            // history 저장
+            saveHistory(teamUser, previousRole, previousStatus);
+        }
+
+    }
 
     // 내 승인 대기 조회
     public List<MyWaiting> getMyWaiting(Long userId) {
@@ -57,9 +87,9 @@ public class TeamServiceImpl implements TeamService {
         List<MyTeam> myTeams = new ArrayList<>();
         List<TeamUser> teamUsers = teamUserRepository.findByUserIdAndTeamUserStatus(userId, TeamUserStatus.APPROVED);
         for (TeamUser teamUser : teamUsers) {
-            int memberCount = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamUser.getTeamId(), TeamUserStatus.APPROVED).size();
             Team team = teamRepository.findById(teamUser.getTeamId())
                     .orElseThrow(() -> new NotFoundException("팀을 찾을 수 없습니다."));
+            int memberCount = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamUser.getTeamId(), TeamUserStatus.APPROVED).size();
             myTeams.add(MyTeam.from(team, memberCount, teamUser));
         }
         return myTeams;
@@ -119,11 +149,13 @@ public class TeamServiceImpl implements TeamService {
     // 팀 가입 요청
     @Transactional
     public TeamUser teamJoinRequest(User user, Long teamId) {
-        Team team = teamRepository.findById(teamId).
-                orElseThrow(() -> new NotFoundException("존재하지 않는 팀입니다."));
+        Team team = getOrElseThrow(teamId);
 
         if (team.getTeamStatus() == TeamStatus.CLOSED) {
             throw new TeamApplicationException("해당 팀은 모집이 만료되었습니다.");
+        }
+        if (team.getTeamStatus() == TeamStatus.DISBANDED) {
+            throw new TeamApplicationException("해당 팀은 존재하지 않습니다.");
         }
 
         Optional<TeamUser> optionalTeamUser = teamUserRepository.findByUserIdAndTeamId(user.getId(), teamId);
@@ -293,6 +325,7 @@ public class TeamServiceImpl implements TeamService {
             case APPROVED -> NotificationType.APPROVE;
             case REJECTED -> NotificationType.REJECT;
             case KICKED -> NotificationType.KICK;
+            case DISBANDED -> NotificationType.DISBAND;
             default -> null;
         };
 
@@ -312,6 +345,7 @@ public class TeamServiceImpl implements TeamService {
             case APPROVED -> "팀에서 가입을 수락했습니다.";
             case REJECTED -> "팀에서 가입을 거절했습니다.";
             case KICKED -> "팀에서 방출되었습니다.";
+            case DISBANDED -> "팀이 해체하였습니다.";
             default -> "";
         };
     }
@@ -346,7 +380,7 @@ public class TeamServiceImpl implements TeamService {
     // 팀이 존재하는지 확인
     private Team getOrElseThrow(Long teamId) {
         return teamRepository.findById(teamId)
-                .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("해당 팀은 존재하지 않습니다."));
     }
 
     // List<TeamUser> -> List<TeamUserSimpleResponse>

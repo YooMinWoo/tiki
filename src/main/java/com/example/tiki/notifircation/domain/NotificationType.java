@@ -8,5 +8,6 @@ public enum NotificationType {
     APPROVE,     // 승인
     REJECT,      // 거절
     LEFT,        // 탈퇴
-    KICK        // 방출
+    KICK,        // 방출
+    DISBAND      // 해체
 }

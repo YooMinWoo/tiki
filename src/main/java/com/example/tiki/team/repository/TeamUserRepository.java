@@ -20,6 +20,10 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
 
     List<TeamUser> findAllByTeamIdAndTeamUserStatus(Long teamId, TeamUserStatus teamUserStatus);
 
+    // teamUserStatus 리스트에 속하는 모든 teamUser들
+    List<TeamUser> findByTeamIdAndTeamUserStatusIn(Long teamId, List<TeamUserStatus> teamUserStatuses);
+
     // 내가 속한 팀 전제 리스트
     List<TeamUser> findByUserIdAndTeamUserStatus(Long userId, TeamUserStatus teamUserStatus);
+
 }
