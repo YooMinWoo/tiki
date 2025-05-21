@@ -1,6 +1,8 @@
-package com.example.tiki.team.domain;
+package com.example.tiki.team.domain.entity;
 
 import com.example.tiki.global.entity.BaseEntity;
+import com.example.tiki.team.domain.enums.TeamUserRole;
+import com.example.tiki.team.domain.enums.TeamUserStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,10 +1,9 @@
 package com.example.tiki.team.dto;
 
 import com.example.tiki.auth.domain.User;
-import com.example.tiki.team.domain.TeamRole;
-import com.example.tiki.team.domain.TeamStatus;
-import com.example.tiki.team.domain.TeamUser;
-import com.example.tiki.team.domain.TeamUserStatus;
+import com.example.tiki.team.domain.entity.TeamUser;
+import com.example.tiki.team.domain.enums.TeamUserRole;
+import com.example.tiki.team.domain.enums.TeamUserStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,7 +19,8 @@ public class TeamUserSimpleResponse {
     private String email;
     private String introduce;
 
-    private TeamUserStatus teamUserStatus;
+//    private TeamUserStatus teamUserStatus;
+    private TeamUserRole teamUserRole;
 
     private LocalDate dateOfBirth;
     private LocalDateTime createdDate;
@@ -31,7 +31,7 @@ public class TeamUserSimpleResponse {
                 .name(user.getName())
                 .email(user.getEmail())
                 .introduce(user.getIntroduce())
-                .teamUserStatus(teamUser.getTeamUserStatus())
+                .teamUserRole(teamUser.getTeamUserRole())
                 .dateOfBirth(user.getDateOfBirth())
                 .createdDate(teamUser.getCreatedDate())
                 .build();

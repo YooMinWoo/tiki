@@ -1,11 +1,10 @@
-package com.example.tiki.team.domain;
+package com.example.tiki.team.domain.entity;
 
-import com.example.tiki.auth.domain.Role;
 import com.example.tiki.global.entity.BaseEntity;
+import com.example.tiki.team.domain.enums.TeamUserRole;
+import com.example.tiki.team.domain.enums.TeamUserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -35,9 +34,17 @@ public class TeamUser extends BaseEntity {
     // 상태 변경
     public void changeStatus(TeamUserStatus teamUserStatus){
         switch (teamUserStatus){
-            case APPROVED ->  joinedAt = LocalDateTime.now();
+            case APPROVED ->  {
+                this.joinedAt = LocalDateTime.now();
+                this.teamUserRole = TeamUserRole.ROLE_MEMBER;
+            }
         }
         this.teamUserStatus = teamUserStatus;
+    }
+
+    // 권한 변경
+    public void changeRole(TeamUserRole teamUserRole){
+        this.teamUserRole = teamUserRole;
     }
 
 }

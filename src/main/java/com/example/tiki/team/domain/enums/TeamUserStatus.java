@@ -1,4 +1,4 @@
-package com.example.tiki.team.domain;
+package com.example.tiki.team.domain.enums;
 
 public enum TeamUserStatus {
     WAITING,   // 승인 대기

@@ -1,6 +1,5 @@
 package com.example.tiki.notifircation.domain;
 
-import com.example.tiki.team.domain.TeamStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

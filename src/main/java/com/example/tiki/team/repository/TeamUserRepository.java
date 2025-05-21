@@ -1,12 +1,9 @@
 package com.example.tiki.team.repository;
 
-import com.example.tiki.team.domain.TeamRole;
-import com.example.tiki.team.domain.TeamUser;
-import com.example.tiki.team.domain.TeamUserRole;
-import com.example.tiki.team.domain.TeamUserStatus;
+import com.example.tiki.team.domain.entity.TeamUser;
+import com.example.tiki.team.domain.enums.TeamUserRole;
+import com.example.tiki.team.domain.enums.TeamUserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,4 +19,7 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
     Optional<TeamUser> findByUserIdAndTeamIdAndTeamUserStatus(Long userId, Long teamId, TeamUserStatus teamUserStatus);
 
     List<TeamUser> findAllByTeamIdAndTeamUserStatus(Long teamId, TeamUserStatus teamUserStatus);
+
+    // 내가 속한 팀 전제 리스트
+    List<TeamUser> findByUserIdAndTeamUserStatus(Long userId, TeamUserStatus teamUserStatus);
 }

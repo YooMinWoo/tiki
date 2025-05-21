@@ -10,9 +10,9 @@ import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
-import com.example.tiki.team.domain.Team;
-import com.example.tiki.team.domain.TeamUser;
-import com.example.tiki.team.domain.TeamUserRole;
+import com.example.tiki.team.domain.entity.Team;
+import com.example.tiki.team.domain.entity.TeamUser;
+import com.example.tiki.team.domain.enums.TeamUserRole;
 import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.team.repository.TeamUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

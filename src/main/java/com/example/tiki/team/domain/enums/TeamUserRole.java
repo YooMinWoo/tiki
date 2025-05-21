@@ -1,4 +1,4 @@
-package com.example.tiki.team.domain;
+package com.example.tiki.team.domain.enums;
 
 public enum TeamUserRole {
     ROLE_MEMBER,    // 일반 회원

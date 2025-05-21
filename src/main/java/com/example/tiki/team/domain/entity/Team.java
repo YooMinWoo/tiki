@@ -1,6 +1,7 @@
-package com.example.tiki.team.domain;
+package com.example.tiki.team.domain.entity;
 
 import com.example.tiki.global.entity.BaseEntity;
+import com.example.tiki.team.domain.enums.TeamStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,4 +22,8 @@ public class Team extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private TeamStatus teamStatus;
+
+    public void changeStatus(TeamStatus teamStatus){
+        this.teamStatus = teamStatus;
+    }
 }
