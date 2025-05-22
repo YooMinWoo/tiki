@@ -2,12 +2,14 @@ package com.example.tiki.team.service;
 
 import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.repository.AuthRepository;
-import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.global.exception.TeamApplicationException;
 import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
+import com.example.tiki.recruitment.domain.entity.Recruitment;
+import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
+import com.example.tiki.recruitment.repository.RecruitmentRepository;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.entity.TeamUserHistory;
@@ -39,6 +41,7 @@ public class TeamServiceImpl implements TeamService {
     private final AuthRepository authRepository;
     private final NotificationRepository notificationRepository;
     private final CheckUtil checkUtil;
+    private final RecruitmentRepository recruitmentRepository;
 
     // 팀 해체
     @Transactional
@@ -47,7 +50,7 @@ public class TeamServiceImpl implements TeamService {
         checkUtil.validateLeaderAuthority(userId, teamId);
 
         // 팀 존재 확인 및 현재 해체 팀인지 확인 (해체된 팀이거나 존재하지 않는 팀이면 에러 발생)
-        Team team = checkUtil.getOrElseThrow(teamId);
+        Team team = checkUtil.validateAndGetTeam(teamId);
 
         // 팀 상태 변경 -> disband
         team.changeStatus(TeamStatus.DISBANDED);
@@ -73,6 +76,43 @@ public class TeamServiceImpl implements TeamService {
 
     }
 
+    // 팀 비활성화
+    @Transactional
+    public void inactiveTeam(Long userId, Long teamId) {
+        // 팀 존재 확인
+        Team team = checkUtil.validateAndGetTeam(teamId);
+
+        // 리더인지 확인
+        checkUtil.validateLeaderAuthority(userId, teamId);
+
+        // 1. 팀 상태 변경
+        if(team.getTeamStatus() == TeamStatus.INACTIVE) throw new IllegalStateException("이미 비활성화 된 팀입니다.");
+        team.changeStatus(TeamStatus.INACTIVE);
+
+        // 2. 팀 모집 공고 모두 CLOSED로 변경
+        List<Recruitment> recruitments = recruitmentRepository.findByTeamIdAndRecruitmentStatus(teamId, RecruitmentStatus.OPEN);
+        for (Recruitment recruitment : recruitments) {
+            if(recruitment.getRecruitmentStatus() == RecruitmentStatus.OPEN) recruitment.closed();
+        }
+
+        // 3. 매칭이 잡혔을 경우 어떻게 하지?
+    }
+
+    // 팀 활성화
+    @Transactional
+    public void activeTeam(Long userId, Long teamId) {
+        // 팀 존재 확인
+        Team team = checkUtil.validateAndGetTeam(teamId);
+
+        // 리더인지 확인
+        checkUtil.validateLeaderAuthority(userId, teamId);
+
+        // 1. 팀 상태 변경
+        if(team.getTeamStatus() == TeamStatus.ACTIVE) throw new IllegalStateException("이미 활성화 되어있는 팀입니다.");
+        team.changeStatus(TeamStatus.ACTIVE);
+
+    }
+
     // 내 승인 대기 조회
     public List<MyWaiting> getMyWaiting(Long userId) {
         List<MyWaiting> myWaitings = new ArrayList<>();
@@ -87,15 +127,20 @@ public class TeamServiceImpl implements TeamService {
     }
 
     // 내 팀 조회
-    public List<MyTeam> getMyTeam(Long userId){
+    public List<MyTeam> getMyTeam(Long userId, TeamStatus teamStatus){
         List<MyTeam> myTeams = new ArrayList<>();
         List<TeamUser> teamUsers = teamUserRepository.findByUserIdAndTeamUserStatus(userId, TeamUserStatus.APPROVED);
+
         for (TeamUser teamUser : teamUsers) {
-            Team team = teamRepository.findById(teamUser.getTeamId())
-                    .orElseThrow(() -> new NotFoundException("팀을 찾을 수 없습니다."));
-            int memberCount = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamUser.getTeamId(), TeamUserStatus.APPROVED).size();
-            myTeams.add(MyTeam.from(team, memberCount, teamUser));
+            Team team = checkUtil.validateAndGetTeam(teamUser.getTeamId());
+
+            // 조건에 맞는 팀만 필터링
+            if (teamStatus == null || team.getTeamStatus() == teamStatus) {
+                int memberCount = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamUser.getTeamId(), TeamUserStatus.APPROVED).size();
+                myTeams.add(MyTeam.from(team, memberCount, teamUser));
+            }
         }
+
         return myTeams;
     }
 
@@ -103,7 +148,7 @@ public class TeamServiceImpl implements TeamService {
     public List<TeamDto> findTeams(TeamStatus teamStatus) {
         List<Team> teams;
         if (teamStatus == null) {
-            teams = teamRepository.findAll();
+            teams = teamRepository.findByTeamStatusIn(List.of(TeamStatus.ACTIVE, TeamStatus.INACTIVE));
         } else {
             teams = teamRepository.findByTeamStatus(teamStatus);
         }
@@ -153,7 +198,7 @@ public class TeamServiceImpl implements TeamService {
     // 팀 가입 요청
     @Transactional
     public TeamUser teamJoinRequest(User user, Long teamId) {
-        Team team = checkUtil.getOrElseThrow(teamId);
+        Team team = checkUtil.validateAndGetTeam(teamId);
 
         if (team.getTeamStatus() == TeamStatus.INACTIVE) {
             throw new TeamApplicationException("해당 팀은 비활성화 상태입니다.");
@@ -214,7 +259,7 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public void handleTeamUserAction(Long leaderId, Long userId, Long teamId, TeamUserStatus teamUserStatus){
         // 팀 존재 확인
-        Team team = checkUtil.getOrElseThrow(teamId);
+        Team team = checkUtil.validateAndGetTeam(teamId);
 
         // 리더 확인
         checkUtil.validateLeaderAuthority(leaderId, teamId);
@@ -243,7 +288,7 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public void requestTeamLeave(User user, Long teamId){
         // 팀 존재 확인
-        checkUtil.getOrElseThrow(teamId);
+        checkUtil.validateAndGetTeam(teamId);
 
         // 팀 소속인지 확인
         TeamUser teamUser = checkUtil.getTeamUserWithStatus(user.getId(), teamId, TeamUserStatus.APPROVED);
@@ -292,7 +337,7 @@ public class TeamServiceImpl implements TeamService {
     // 승인 대기 리스트
     public List<TeamUserSimpleResponse> getWaitingJoinRequests(Long userId, Long teamId){
         // 팀 존재 확인
-        checkUtil.getOrElseThrow(teamId);
+        checkUtil.validateAndGetTeam(teamId);
 
         // 권한 확인
         checkUtil.validateLeaderAuthority(userId, teamId);
@@ -305,7 +350,7 @@ public class TeamServiceImpl implements TeamService {
     // 회원 리스트
     public List<TeamUserSimpleResponse> getTeamUsers(Long userId, Long teamId){
         // 팀 존재 확인
-        Team team = checkUtil.getOrElseThrow(teamId);
+        Team team = checkUtil.validateAndGetTeam(teamId);
 
         List<TeamUser> teamUsers = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamId, TeamUserStatus.APPROVED);
         return convertToSimpleResponses(teamUsers);

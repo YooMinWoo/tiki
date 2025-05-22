@@ -2,6 +2,7 @@ package com.example.tiki.team.dto;
 
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
+import com.example.tiki.team.domain.enums.TeamStatus;
 import com.example.tiki.team.domain.enums.TeamUserRole;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class MyTeam {
     private String teamName;
     private TeamUserRole teamUserRole;
     private int memberCount;
+    private TeamStatus teamStatus;
     private LocalDateTime joinedAt;
     private LocalDateTime createDate;
 
@@ -30,6 +32,7 @@ public class MyTeam {
                 .teamName(team.getTeamName())
                 .teamUserRole(teamUser.getTeamUserRole())
                 .memberCount(memberCount)
+                .teamStatus(team.getTeamStatus())
                 .joinedAt(teamUser.getJoinedAt())
                 .createDate(team.getCreatedDate())
                 .build();

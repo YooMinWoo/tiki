@@ -37,12 +37,36 @@ public class TeamController {
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 목록 조회", teamList));
     }
 
+    @PostMapping("/{teamId}/inactive")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @Operation(summary = "팀 비활성화",
+            description = "팀 리더가 팀을 비활성화합니다."
+    )
+    public ResponseEntity<?> inactiveTeam(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                  @PathVariable("teamId") Long teamId) {
+        User user = customUserDetails.getUser();
+        teamService.inactiveTeam(user.getId(), teamId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 비활성화 success!", null));
+    }
+
+    @PostMapping("/{teamId}/active")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @Operation(summary = "팀 활성화",
+            description = "팀 리더가 팀을 활성화합니다."
+    )
+    public ResponseEntity<?> activeTeam(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                        @PathVariable("teamId") Long teamId) {
+        User user = customUserDetails.getUser();
+        teamService.activeTeam(user.getId(), teamId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 활성화 success!", null));
+    }
+
     @PostMapping("/{teamId}/disband")
     @PreAuthorize("hasRole('ROLE_USER')")
     @Operation(summary = "팀 해체",
             description = "팀 리더가 팀을 해체합니다."
     )
-    public ResponseEntity<?> team(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+    public ResponseEntity<?> disbandTeam(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                   @PathVariable("teamId") Long teamId) {
         User user = customUserDetails.getUser();
         teamService.disbandTeam(user.getId(), teamId);

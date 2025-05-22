@@ -4,8 +4,10 @@ import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.dto.MyPageDto;
 import com.example.tiki.auth.security.user.CustomUserDetails;
 import com.example.tiki.global.dto.ApiResponse;
+import com.example.tiki.team.domain.enums.TeamStatus;
 import com.example.tiki.team.dto.MyTeam;
 import com.example.tiki.team.dto.MyWaiting;
+import com.example.tiki.team.dto.TeamStatusVisible;
 import com.example.tiki.team.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,10 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,9 +40,11 @@ public class MyPageController {
     // 내 팀 조회
     @GetMapping("/teams")
     @Operation(summary = "내 팀 목록 조회", description = "현재 내가 소속된 팀 목록을 조회합니다.")
-    public ResponseEntity<?> getMyTeams(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    public ResponseEntity<?> getMyTeams(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                        @RequestParam(value = "status", required = false) TeamStatusVisible teamStatusVisible) {
         User user = customUserDetails.getUser();
-        List<MyTeam> teamList = teamService.getMyTeam(user.getId());
+        TeamStatus status = (teamStatusVisible != null) ? teamStatusVisible.toTeamStatus() : null;
+        List<MyTeam> teamList = teamService.getMyTeam(user.getId(), status);
         return ResponseEntity.ok(ApiResponse.success("내 팀 목록 조회", teamList));
     }
 

@@ -14,7 +14,7 @@ public interface TeamService {
     List<MyWaiting> getMyWaiting(Long userId);
 
     // 내 팀 조회
-    List<MyTeam> getMyTeam(Long userId);
+    List<MyTeam> getMyTeam(Long userId, TeamStatus status);
 
     // 팀 조회
     List<TeamDto> findTeams(TeamStatus teamStatus);
@@ -42,5 +42,11 @@ public interface TeamService {
 
     // 팀 해체
     void disbandTeam(Long userId, Long teamId);
+
+    // 팀 비활성화
+    void inactiveTeam(Long userId, Long teamId);
+
+    // 팀 활성화
+    void activeTeam(Long userId, Long teamId);
 
 }

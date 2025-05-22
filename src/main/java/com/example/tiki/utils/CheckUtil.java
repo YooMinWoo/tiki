@@ -2,6 +2,9 @@ package com.example.tiki.utils;
 
 import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
+import com.example.tiki.recruitment.domain.entity.Recruitment;
+import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
+import com.example.tiki.recruitment.repository.RecruitmentRepository;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.enums.TeamStatus;
@@ -11,7 +14,8 @@ import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.team.repository.TeamUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -19,13 +23,21 @@ public class CheckUtil {
 
     private final TeamRepository teamRepository;
     private final TeamUserRepository teamUserRepository;
+    private final RecruitmentRepository recruitmentRepository;
 
     // 팀이 존재하는지 확인
-    public Team getOrElseThrow(Long teamId) {
+    public Team validateAndGetTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
         if(team.getTeamStatus() == TeamStatus.DISBANDED) throw new NotFoundException("해당 팀은 존재하지 않습니다.");
         return team;
+    }
+    // 모집글이 존재하는지 확인
+    public Recruitment validateAndGetRecruitment(Long recruitmentId){
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
+        if(recruitment.getRecruitmentStatus() == RecruitmentStatus.DELETED) throw new NotFoundException("존재하지 않는 게시글입니다.");
+        return recruitment;
     }
 
     // 수행하려는 주체의 권한이 리더인지 확인

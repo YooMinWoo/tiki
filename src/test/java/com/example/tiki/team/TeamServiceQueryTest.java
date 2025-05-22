@@ -254,7 +254,7 @@ public class TeamServiceQueryTest {
             }
         }
 
-        List<MyTeam> myTeams = teamService.getMyTeam(member.getId());
+        List<MyTeam> myTeams = teamService.getMyTeam(member.getId(), null);
         assertThat(myTeams.size()).isEqualTo(2);
         for (MyTeam myTeam : myTeams) {
             System.out.println(myTeam);

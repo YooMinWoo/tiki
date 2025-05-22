@@ -2,7 +2,6 @@ package com.example.tiki.recruitment.service;
 
 import com.example.tiki.follow.domain.Follow;
 import com.example.tiki.follow.repository.FollowRepository;
-import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
@@ -14,10 +13,7 @@ import com.example.tiki.recruitment.dto.RecruitmentUpdateRequest;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.enums.TeamStatus;
-import com.example.tiki.team.domain.enums.TeamUserRole;
 import com.example.tiki.utils.CheckUtil;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +34,7 @@ public class RecruitmentServiceImpl implements RecruitmentService{
     @Transactional
     public void createRecruitmentPost(Long userId, Long teamId, RecruitmentCreateRequest recruitmentCreateRequest){
         // 팀 존재 확인
-        Team team = checkUtil.getOrElseThrow(teamId);
+        Team team = checkUtil.validateAndGetTeam(teamId);
         if(team.getTeamStatus() == TeamStatus.INACTIVE) throw new IllegalStateException("비활성화 상태입니다.");
 
         // 리더 권한 확인
@@ -67,11 +63,11 @@ public class RecruitmentServiceImpl implements RecruitmentService{
     @Transactional
     public void updateRecruitmentPost(Long userId, RecruitmentUpdateRequest request){
         // 팀 존재 확인
-        Team team = checkUtil.getOrElseThrow(request.getRecruitmentId());
+        Team team = checkUtil.validateAndGetTeam(request.getRecruitmentId());
         if(team.getTeamStatus() == TeamStatus.INACTIVE) throw new IllegalStateException("비활성화 상태인 팀입니다.");
 
-        Recruitment recruitment = recruitmentRepository.findById(request.getRecruitmentId())
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
+        // 존재하는 모집 글인지 확인
+        Recruitment recruitment = checkUtil.validateAndGetRecruitment(request.getRecruitmentId());
 
         if(recruitment.getRecruitmentStatus() == RecruitmentStatus.CLOSE) throw new IllegalStateException("모집 마감된 게시글입니다.");
 
@@ -84,8 +80,8 @@ public class RecruitmentServiceImpl implements RecruitmentService{
     // 모집글 마감
     @Transactional
     public void closeRecruitmentPost(Long userId, Long recruitmentId){
-        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
+        // 존재하는 모집 글인지 확인
+        Recruitment recruitment = checkUtil.validateAndGetRecruitment(recruitmentId);
 
         // 리더 권한 확인
         checkUtil.validateLeaderAuthority(userId, recruitment.getTeamId());
@@ -97,7 +93,17 @@ public class RecruitmentServiceImpl implements RecruitmentService{
     }
 
     // 모집글 삭제
-    public void deleteRecruitmentPost(){};
+    public void deleteRecruitmentPost(Long userId, Long recruitmentId){
+        // 존재하는 모집 글인지 확인
+        Recruitment recruitment = checkUtil.validateAndGetRecruitment(recruitmentId);
+
+        // 리더 권한 확인
+        checkUtil.validateLeaderAuthority(userId, recruitment.getTeamId());
+
+        if(recruitment.getRecruitmentStatus() == RecruitmentStatus.DELETED) throw new IllegalStateException("삭제된 공고는 처리할 수 없습니다.");
+
+        recruitment.deleted();
+    };
 
 
 

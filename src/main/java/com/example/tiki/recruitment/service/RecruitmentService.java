@@ -14,7 +14,7 @@ public interface RecruitmentService {
     void closeRecruitmentPost(Long userId, Long recruitmentId);
 
     // 모집글 삭제
-    void deleteRecruitmentPost();
+    void deleteRecruitmentPost(Long userId, Long recruitmentId);
 
     // 특정 id 모집글 조회
 

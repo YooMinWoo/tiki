@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-public class TeamServiceCreateDisbandTest {
+public class TeamServiceCreateAndDisbandTest {
 
     @Autowired
     TeamService teamService;

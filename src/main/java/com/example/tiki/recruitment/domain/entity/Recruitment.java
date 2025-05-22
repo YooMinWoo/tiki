@@ -64,4 +64,8 @@ public class Recruitment extends BaseEntity {
         this.closedAt = null;
     }
 
+    public void deleted(){
+        this.recruitmentStatus = RecruitmentStatus.DELETED;
+    }
+
 }
