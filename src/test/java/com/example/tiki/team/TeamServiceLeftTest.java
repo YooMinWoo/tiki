@@ -84,7 +84,7 @@ public class TeamServiceLeftTest {
                 Team.builder()
                         .teamName("테스트 팀")
                         .teamDescription("테스트 설명")
-                        .teamStatus(TeamStatus.OPEN)
+                        .teamStatus(TeamStatus.ACTIVE)
                         .build());
 
         teamUserRepository.save(TeamUser.builder()

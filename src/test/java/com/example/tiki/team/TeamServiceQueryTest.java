@@ -85,7 +85,7 @@ public class TeamServiceQueryTest {
         team = teamRepository.save(Team.builder()
                 .teamName("테스트 팀")
                 .teamDescription("테스트 설명")
-                .teamStatus(TeamStatus.OPEN)
+                .teamStatus(TeamStatus.ACTIVE)
                 .build());
 
         teamUserRepository.save(TeamUser.builder()
@@ -101,7 +101,7 @@ public class TeamServiceQueryTest {
     @Test
     void 팀_조회(){
         for(int i=1; i <=16; i++){
-            TeamStatus status = i%2==0? TeamStatus.OPEN : TeamStatus.CLOSED;
+            TeamStatus status = i%2==0? TeamStatus.ACTIVE : TeamStatus.INACTIVE;
             Team team = Team.builder()
                     .teamName("테스트 팀"+i)
                     .teamDescription("테스트 설명"+i)
@@ -121,12 +121,12 @@ public class TeamServiceQueryTest {
         }
 
         List<TeamDto> allTeamList = teamService.findTeams(null);
-        List<TeamDto> openTeamList = teamService.findTeams(TeamStatus.OPEN);
-        List<TeamDto> closedTeamList = teamService.findTeams(TeamStatus.CLOSED);
+        List<TeamDto> activeTeamList = teamService.findTeams(TeamStatus.ACTIVE);
+        List<TeamDto> inactiveTeamList = teamService.findTeams(TeamStatus.INACTIVE);
 
         assertThat(allTeamList.size()).isEqualTo(17);
-        assertThat(openTeamList.size()).isEqualTo(9);
-        assertThat(closedTeamList.size()).isEqualTo(8);
+        assertThat(activeTeamList.size()).isEqualTo(9);
+        assertThat(inactiveTeamList.size()).isEqualTo(8);
         for(TeamDto dto : allTeamList){
             System.out.println(dto);
         }
@@ -219,9 +219,9 @@ public class TeamServiceQueryTest {
 
     @Test
     void 없는_팀_회원리스트(){
-        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+        ForbiddenException ex = assertThrows(ForbiddenException.class,
                 () -> teamService.getTeamUsers(member.getId(), 1000L));
-        assertThat(notFoundException.getMessage()).isEqualTo("해당 팀은 존재하지 않습니다.");
+        assertThat(ex.getMessage()).isEqualTo("해당 팀은 존재하지 않습니다.");
     }
 
     @Test
@@ -230,7 +230,7 @@ public class TeamServiceQueryTest {
             Team team = Team.builder()
                     .teamName("테스트 팀"+i)
                     .teamDescription("테스트 설명"+i)
-                    .teamStatus(TeamStatus.OPEN)
+                    .teamStatus(TeamStatus.ACTIVE)
                     .build();
             teamRepository.save(team);
 
@@ -268,7 +268,7 @@ public class TeamServiceQueryTest {
             Team team = Team.builder()
                     .teamName("테스트 팀"+i)
                     .teamDescription("테스트 설명"+i)
-                    .teamStatus(TeamStatus.OPEN)
+                    .teamStatus(TeamStatus.ACTIVE)
                     .build();
             teamRepository.save(team);
 

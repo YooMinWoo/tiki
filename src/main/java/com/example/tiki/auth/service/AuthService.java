@@ -6,9 +6,11 @@ import com.example.tiki.auth.dto.UserSignupDto;
 import com.example.tiki.auth.repository.AuthRepository;
 import com.example.tiki.auth.security.jwt.JwtUtil;
 import com.example.tiki.auth.security.jwt.TokenDto;
+import com.example.tiki.auth.security.user.CustomUserDetails;
 import com.example.tiki.global.exception.*;
 import com.example.tiki.global.redis.RedisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -52,5 +54,18 @@ public class AuthService {
         if(!passwordEncoder.matches(password, user.getPassword())) throw new InvalidVerificationCodeException("비밀번호가 일치하지 않습니다.");
 
         return jwtUtil.generateToken(user);
+    }
+
+    public TokenDto refreshToken(String refreshToken) {
+        try{
+            jwtUtil.isExpired(refreshToken);
+            Authentication authentication = jwtUtil.getAuthentication(refreshToken);
+            CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+            User user = customUserDetails.getUser();
+
+            return jwtUtil.generateToken(user);
+        } catch (Exception e){
+            throw new CustomException("로그인 창으로 이동");
+        }
     }
 }

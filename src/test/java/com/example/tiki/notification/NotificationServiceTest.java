@@ -56,7 +56,7 @@ public class NotificationServiceTest {
             teamRepository.save(Team.builder()
                     .teamName("test" + i + " FC")
                     .teamDescription("test" + i +" FC입니다.")
-                    .teamStatus(TeamStatus.OPEN)
+                    .teamStatus(TeamStatus.ACTIVE)
                     .build());
         }
 

@@ -70,7 +70,7 @@ public class FollowTest {
         team = teamRepository.save(Team.builder()
                 .teamName("푸에르 FC")
                 .teamDescription("푸에르 FC입니다.")
-                .teamStatus(TeamStatus.OPEN)
+                .teamStatus(TeamStatus.ACTIVE)
                 .build());
 
         teamUser = teamUserRepository.save(TeamUser.builder()

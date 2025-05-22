@@ -13,6 +13,8 @@ import com.example.tiki.global.redis.RedisService;
 import com.example.tiki.utils.EmailUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -109,17 +112,27 @@ public class AuthController {
                                    @RequestParam("password") String password,
                                    HttpServletResponse response) {
         TokenDto tokenDto = authService.login(email, password);
-        response.setHeader("Set-Cookie", tokenDto.getRefreshToken());
+//        response.setHeader("Set-Cookie", tokenDto.getRefreshToken());
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("로그인 성공!", tokenDto));
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/myPage")
-    @Operation(summary = "마이페이지",
-            description = "마이페이지 조회 API (로그인 했을 경우에만 접속 가능)"
+    @PostMapping("/refresh")
+    @Operation(
+            summary = "refresh",
+            description = "refresh 토큰 값을 통해 access 토큰과 refresh 토큰을 재발급 받는 API입니다. (단, refresh 토큰 값이 일치할 경우)"
     )
-    public ResponseEntity<?> myPage(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        MyPageDto myPageDto = MyPageDto.toDto(customUserDetails.getUser());
-        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("my!", myPageDto));
+    public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) throw new RuntimeException("No cookies found");
+
+        String refreshToken = Arrays.stream(cookies)
+                .filter(cookie -> "refreshToken".equals(cookie.getName()))
+                .findFirst()
+                .map(Cookie::getValue)
+                .orElseThrow(() -> new RuntimeException("No refresh token found"));
+
+        TokenDto tokenDto = authService.refreshToken(refreshToken);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("로그인 성공!", tokenDto));
     }
+
 }

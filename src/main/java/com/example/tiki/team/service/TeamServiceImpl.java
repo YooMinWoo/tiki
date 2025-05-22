@@ -18,6 +18,7 @@ import com.example.tiki.team.dto.*;
 import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.team.repository.TeamUserHistoryRepository;
 import com.example.tiki.team.repository.TeamUserRepository;
+import com.example.tiki.utils.CheckUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,15 +38,18 @@ public class TeamServiceImpl implements TeamService {
     private final TeamUserHistoryRepository teamUserHistoryRepository;
     private final AuthRepository authRepository;
     private final NotificationRepository notificationRepository;
+    private final CheckUtil checkUtil;
 
     // 팀 해체
     @Transactional
     public void disbandTeam(Long userId, Long teamId) {
         // 리더인지 확인
-        validateLeaderAuthority(userId, teamId);
+        checkUtil.validateLeaderAuthority(userId, teamId);
+
+        // 팀 존재 확인 및 현재 해체 팀인지 확인 (해체된 팀이거나 존재하지 않는 팀이면 에러 발생)
+        Team team = checkUtil.getOrElseThrow(teamId);
 
         // 팀 상태 변경 -> disband
-        Team team = getOrElseThrow(teamId);
         team.changeStatus(TeamStatus.DISBANDED);
 
         List<TeamUserStatus> teamUserStatuses = List.of(TeamUserStatus.APPROVED, TeamUserStatus.WAITING);
@@ -118,7 +122,7 @@ public class TeamServiceImpl implements TeamService {
         Team team = Team.builder()
                     .teamName(teamCreateRequestDto.getTeamName())
                     .teamDescription(teamCreateRequestDto.getTeamDescription())
-                    .teamStatus(TeamStatus.OPEN)
+                    .teamStatus(TeamStatus.ACTIVE)
                     .build();
 
         teamRepository.save(team);
@@ -149,13 +153,10 @@ public class TeamServiceImpl implements TeamService {
     // 팀 가입 요청
     @Transactional
     public TeamUser teamJoinRequest(User user, Long teamId) {
-        Team team = getOrElseThrow(teamId);
+        Team team = checkUtil.getOrElseThrow(teamId);
 
-        if (team.getTeamStatus() == TeamStatus.CLOSED) {
-            throw new TeamApplicationException("해당 팀은 모집이 만료되었습니다.");
-        }
-        if (team.getTeamStatus() == TeamStatus.DISBANDED) {
-            throw new TeamApplicationException("해당 팀은 존재하지 않습니다.");
+        if (team.getTeamStatus() == TeamStatus.INACTIVE) {
+            throw new TeamApplicationException("해당 팀은 비활성화 상태입니다.");
         }
 
         Optional<TeamUser> optionalTeamUser = teamUserRepository.findByUserIdAndTeamId(user.getId(), teamId);
@@ -213,10 +214,10 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public void handleTeamUserAction(Long leaderId, Long userId, Long teamId, TeamUserStatus teamUserStatus){
         // 팀 존재 확인
-        Team team = getOrElseThrow(teamId);
+        Team team = checkUtil.getOrElseThrow(teamId);
 
         // 리더 확인
-        validateLeaderAuthority(leaderId, teamId);
+        checkUtil.validateLeaderAuthority(leaderId, teamId);
 
         // status 확인
         TeamUser teamUser = getTargetTeamUser(userId, teamId, teamUserStatus);
@@ -242,10 +243,10 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public void requestTeamLeave(User user, Long teamId){
         // 팀 존재 확인
-        getOrElseThrow(teamId);
+        checkUtil.getOrElseThrow(teamId);
 
         // 팀 소속인지 확인
-        TeamUser teamUser = getTeamUserWithStatus(user.getId(), teamId, TeamUserStatus.APPROVED);
+        TeamUser teamUser = checkUtil.getTeamUserWithStatus(user.getId(), teamId, TeamUserStatus.APPROVED);
 
         // if 권한이 리더 -> throw
         if(teamUser.getTeamUserRole() == TeamUserRole.ROLE_LEADER){
@@ -282,7 +283,7 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public void cancelJoinRequest(Long userId, Long teamId) {
         // 취소가 가능한 waiting인 TeamUser의 TeamUserHistory는 1개밖에 없을 것이다.
-        TeamUser teamUser = getTeamUserWithStatus(userId, teamId, TeamUserStatus.WAITING);
+        TeamUser teamUser = checkUtil.getTeamUserWithStatus(userId, teamId, TeamUserStatus.WAITING);
         teamUserRepository.delete(teamUser);
 
         teamUserHistoryRepository.deleteAllByTeamUserId(teamUser.getId());
@@ -291,10 +292,10 @@ public class TeamServiceImpl implements TeamService {
     // 승인 대기 리스트
     public List<TeamUserSimpleResponse> getWaitingJoinRequests(Long userId, Long teamId){
         // 팀 존재 확인
-        getOrElseThrow(teamId);
+        checkUtil.getOrElseThrow(teamId);
 
         // 권한 확인
-        validateLeaderAuthority(userId, teamId);
+        checkUtil.validateLeaderAuthority(userId, teamId);
 
         List<TeamUser> teamUsers = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamId, TeamUserStatus.WAITING);
 
@@ -304,7 +305,7 @@ public class TeamServiceImpl implements TeamService {
     // 회원 리스트
     public List<TeamUserSimpleResponse> getTeamUsers(Long userId, Long teamId){
         // 팀 존재 확인
-        getOrElseThrow(teamId);
+        Team team = checkUtil.getOrElseThrow(teamId);
 
         List<TeamUser> teamUsers = teamUserRepository.findAllByTeamIdAndTeamUserStatus(teamId, TeamUserStatus.APPROVED);
         return convertToSimpleResponses(teamUsers);
@@ -313,8 +314,8 @@ public class TeamServiceImpl implements TeamService {
     // 현재 처리 상태 확인
     private TeamUser getTargetTeamUser(Long userId, Long teamId, TeamUserStatus targetStatus) {
         return switch (targetStatus) {
-            case APPROVED, REJECTED -> getTeamUserWithStatus(userId, teamId, TeamUserStatus.WAITING);
-            case KICKED -> getTeamUserWithStatus(userId, teamId, TeamUserStatus.APPROVED);
+            case APPROVED, REJECTED -> checkUtil.getTeamUserWithStatus(userId, teamId, TeamUserStatus.WAITING);
+            case KICKED -> checkUtil.getTeamUserWithStatus(userId, teamId, TeamUserStatus.APPROVED);
             default -> throw new IllegalArgumentException("처리할 수 없는 상태입니다.");
         };
     }
@@ -361,26 +362,6 @@ public class TeamServiceImpl implements TeamService {
                 .previousStatus(previousStatus)
                 .currentStatus(teamUser.getTeamUserStatus())
                 .build());
-    }
-
-    // 특정 상태의 유저 확인
-    private TeamUser getTeamUserWithStatus(Long userId, Long teamId, TeamUserStatus teamUserStatus) {
-        TeamUser teamUser = teamUserRepository.findByUserIdAndTeamIdAndTeamUserStatus(userId, teamId, teamUserStatus)
-                .orElseThrow(() -> new ForbiddenException("해당 상태의 유저를 찾을 수 없습니다."));
-        return teamUser;
-    }
-
-    // 수행하려는 주체의 권한이 리더인지 확인
-    private void validateLeaderAuthority(Long leaderId, Long teamId) {
-        if(leaderId != teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER).getUserId()){
-            throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
-        }
-    }
-
-    // 팀이 존재하는지 확인
-    private Team getOrElseThrow(Long teamId) {
-        return teamRepository.findById(teamId)
-                .orElseThrow(() -> new ForbiddenException("해당 팀은 존재하지 않습니다."));
     }
 
     // List<TeamUser> -> List<TeamUserSimpleResponse>

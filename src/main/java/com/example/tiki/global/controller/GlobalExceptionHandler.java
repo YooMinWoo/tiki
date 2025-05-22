@@ -16,8 +16,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value()).body(ApiResponse.fail(e.getMessage()));
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<?> _409Exception(EmailAlreadyExistsException e){
+    @ExceptionHandler({EmailAlreadyExistsException.class, IllegalStateException.class})
+    public ResponseEntity<?> _409Exception(RuntimeException e){
         return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(ApiResponse.fail(e.getMessage()));
     }
 

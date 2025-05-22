@@ -59,7 +59,7 @@ public class NotificationService {
             case FOLLOW, LEFT -> "/api/users/" + targetId;
             case APPROVE, REJECT, KICK -> "/api/teams/" + targetId;
             case JOIN -> "/api/teams/"+targetId+"/join-request/waiting";
-            case DISBAND -> "";
+            case DISBAND -> "/api/users/teams";
         };
     }
 }

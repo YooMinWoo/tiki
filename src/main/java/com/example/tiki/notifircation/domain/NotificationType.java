@@ -9,5 +9,6 @@ public enum NotificationType {
     REJECT,      // 거절
     LEFT,        // 탈퇴
     KICK,        // 방출
-    DISBAND      // 해체
+    DISBAND,      // 해체
+
 }
