@@ -58,7 +58,7 @@ public class Recruitment extends BaseEntity {
         this.closedAt = LocalDateTime.now();
     }
 
-    public void reOpen(){
+    public void reopen(){
         this.recruitmentStatus = RecruitmentStatus.OPEN;
         this.openedAt = LocalDateTime.now();
         this.closedAt = null;

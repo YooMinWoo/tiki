@@ -145,18 +145,20 @@ public class TeamServiceImpl implements TeamService {
     }
 
     // 팀 조회
-    public List<TeamDto> findTeams(TeamStatus teamStatus) {
-        List<Team> teams;
-        if (teamStatus == null) {
-            teams = teamRepository.findByTeamStatusIn(List.of(TeamStatus.ACTIVE, TeamStatus.INACTIVE));
-        } else {
-            teams = teamRepository.findByTeamStatus(teamStatus);
+    public List<TeamDto> getTeamSearchResult(String keyword, TeamStatusVisible teamStatusVisible) {
+        List<TeamDto> resultDtoList = new ArrayList<>();
+        keyword = keyword == null ? "" : keyword;
+        TeamStatus teamStatus = (teamStatusVisible != null) ? teamStatusVisible.toTeamStatus() : null;
+
+        List<Team> teams = (teamStatus == null)
+                ? teamRepository.findByTeamNameContainingAndTeamStatusNot(keyword, TeamStatus.DISBANDED)
+                : teamRepository.findByTeamNameContainingAndTeamStatus(keyword, teamStatus);
+
+        for (Team team : teams) {
+            resultDtoList.add(TeamDto.toDto(team));
         }
-        return Optional.ofNullable(teams)
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(TeamDto::toDto)
-                .collect(Collectors.toList());
+
+        return resultDtoList;
     }
 
 

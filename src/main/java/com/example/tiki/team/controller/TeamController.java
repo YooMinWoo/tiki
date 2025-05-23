@@ -31,9 +31,9 @@ public class TeamController {
     @Operation(summary = "팀 목록 조회",
             description = "팀 전체 / 상태별 목록 조회 API"
     )
-    public ResponseEntity<?> team(@RequestParam(value = "status", required = false) TeamStatusVisible teamStatusVisible) {
-        TeamStatus status = (teamStatusVisible != null) ? teamStatusVisible.toTeamStatus() : null;
-        List<TeamDto> teamList = teamService.findTeams(status);
+    public ResponseEntity<?> team(@RequestParam(value = "keyword", required = false) String keyword,
+                                  @RequestParam(value = "status", required = false) TeamStatusVisible teamStatusVisible) {
+        List<TeamDto> teamList = teamService.getTeamSearchResult(keyword, teamStatusVisible);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 목록 조회", teamList));
     }
 

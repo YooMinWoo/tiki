@@ -1,7 +1,12 @@
 package com.example.tiki.recruitment.service;
 
+import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.dto.RecruitmentCreateRequest;
+import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
+import com.example.tiki.recruitment.dto.RecruitmentStatusVisible;
 import com.example.tiki.recruitment.dto.RecruitmentUpdateRequest;
+
+import java.util.List;
 
 public interface RecruitmentService {
     // 모집글 등록
@@ -16,7 +21,9 @@ public interface RecruitmentService {
     // 모집글 삭제
     void deleteRecruitmentPost(Long userId, Long recruitmentId);
 
-    // 특정 id 모집글 조회
+    // 모집글 리오픈
+    void reopenRecruitmentPost(Long userId, Long recruitmentId);
 
-    // 모집글 조회
+    // 모집글 조회(키워드, 상태 필터)
+    List<RecruitmentSearchResultDto> getRecruitmentSearchResult(String keyword, RecruitmentStatusVisible status);
 }

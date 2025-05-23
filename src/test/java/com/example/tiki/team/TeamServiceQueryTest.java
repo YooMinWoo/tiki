@@ -11,10 +11,7 @@ import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.enums.TeamStatus;
 import com.example.tiki.team.domain.enums.TeamUserRole;
 import com.example.tiki.team.domain.enums.TeamUserStatus;
-import com.example.tiki.team.dto.MyTeam;
-import com.example.tiki.team.dto.MyWaiting;
-import com.example.tiki.team.dto.TeamDto;
-import com.example.tiki.team.dto.TeamUserSimpleResponse;
+import com.example.tiki.team.dto.*;
 import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.team.repository.TeamUserHistoryRepository;
 import com.example.tiki.team.repository.TeamUserRepository;
@@ -119,17 +116,19 @@ public class TeamServiceQueryTest {
 
             teamUserRepository.save(teamUser);
         }
+        //
 
-        List<TeamDto> allTeamList = teamService.findTeams(null);
-        List<TeamDto> activeTeamList = teamService.findTeams(TeamStatus.ACTIVE);
-        List<TeamDto> inactiveTeamList = teamService.findTeams(TeamStatus.INACTIVE);
+        List<TeamDto> teamList1 = teamService.getTeamSearchResult(null,null);
+        List<TeamDto> teamList2 = teamService.getTeamSearchResult("6",null);
+        List<TeamDto> teamList3 = teamService.getTeamSearchResult(null, TeamStatusVisible.ACTIVE);
+        List<TeamDto> teamList4 = teamService.getTeamSearchResult("1", TeamStatusVisible.ACTIVE);
+        List<TeamDto> teamList5 = teamService.getTeamSearchResult(null, TeamStatusVisible.INACTIVE);
 
-        assertThat(allTeamList.size()).isEqualTo(17);
-        assertThat(activeTeamList.size()).isEqualTo(9);
-        assertThat(inactiveTeamList.size()).isEqualTo(8);
-        for(TeamDto dto : allTeamList){
-            System.out.println(dto);
-        }
+        assertThat(teamList1.size()).isEqualTo(17);
+        assertThat(teamList2.size()).isEqualTo(2);
+        assertThat(teamList3.size()).isEqualTo(9);
+        assertThat(teamList4.size()).isEqualTo(4);
+        assertThat(teamList5.size()).isEqualTo(8);
     }
 
     @Test
@@ -219,7 +218,7 @@ public class TeamServiceQueryTest {
 
     @Test
     void 없는_팀_회원리스트(){
-        ForbiddenException ex = assertThrows(ForbiddenException.class,
+        NotFoundException ex = assertThrows(NotFoundException.class,
                 () -> teamService.getTeamUsers(member.getId(), 1000L));
         assertThat(ex.getMessage()).isEqualTo("해당 팀은 존재하지 않습니다.");
     }

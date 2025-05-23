@@ -10,6 +10,8 @@ import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
+import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
+import com.example.tiki.recruitment.dto.RecruitmentStatusVisible;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
 import com.example.tiki.recruitment.service.RecruitmentService;
 import com.example.tiki.team.domain.entity.Team;
@@ -26,13 +28,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
-public class RecruitmentDeleteTest {
+public class RecuritmentSearchTest {
 
     @Autowired
     private RecruitmentService recruitmentService;
@@ -103,30 +106,66 @@ public class RecruitmentDeleteTest {
     // 리더가 아닐 때
 
     @Test
-    void 게시물_삭제_성공(){
-
-        Recruitment recruitment = recruitmentRepository.save(Recruitment.builder()
-                .teamId(team.getId())
-                .title("테스트 제목")
-                .content("테스트 내용")
-                .recruitmentStatus(RecruitmentStatus.OPEN)
-                .openedAt(LocalDateTime.now())
-                .closedAt(null)
-                .build());
-
-        recruitmentService.deleteRecruitmentPost(leader.getId(), recruitment.getId());
-
-        for (Recruitment rec : recruitmentRepository.findAll()) {
-            assertThat(rec.getTitle()).isEqualTo(recruitment.getTitle());
-            assertThat(rec.getContent()).isEqualTo(recruitment.getContent());
-            assertThat(rec.getTeamId()).isEqualTo(team.getId());
-            assertThat(rec.getRecruitmentStatus()).isEqualTo(RecruitmentStatus.DELETED);
+    void 게시물_조회_성공(){
+        for(int i=1; i<=3; i++){
+            Recruitment recruitment = recruitmentRepository.save(Recruitment.builder()
+                    .teamId(team.getId())
+                    .title("제목" + i)
+                    .content("내용" + i)
+                    .recruitmentStatus(RecruitmentStatus.OPEN)
+                    .openedAt(LocalDateTime.now())
+                    .closedAt(null)
+                    .build());
+            if(i==2) recruitmentService.closeRecruitmentPost(leader.getId(), recruitment.getId());
+        }
+        for(int i=1; i<=3; i++){
+            Recruitment recruitment = recruitmentRepository.save(Recruitment.builder()
+                    .teamId(team.getId())
+                    .title("타이틀" + i)
+                    .content("내용" + i)
+                    .recruitmentStatus(RecruitmentStatus.OPEN)
+                    .openedAt(LocalDateTime.now())
+                    .closedAt(null)
+                    .build());
+            if(i==3) recruitmentService.closeRecruitmentPost(leader.getId(), recruitment.getId());
         }
 
+        // 키워드 = null, 상태 = null
+        // 키워드 = 타이틀, 상태 = null
+        // 키워드 = 제목, 상태 = null
+        // 키워드 = 1, 상태 = null
+        // 키워드 = 타이틀, 상태 = OPEN
+        // 키워드 = 제목, 상태 = CLOSE
+        // 키워드 = 3, 상태 = null
+        // 키워드 = 3, 상태 = OPEN
+        // 키워드 = null, 상태 = OPEN
+        // 키워드 = null, 상태 = CLOSE
+
+        List<RecruitmentSearchResultDto> result1 = recruitmentService.getRecruitmentSearchResult(null, null);
+        List<RecruitmentSearchResultDto> result2 = recruitmentService.getRecruitmentSearchResult("타이틀", null);
+        List<RecruitmentSearchResultDto> result3 = recruitmentService.getRecruitmentSearchResult("제목", null);
+        List<RecruitmentSearchResultDto> result4 = recruitmentService.getRecruitmentSearchResult("1", null);
+        List<RecruitmentSearchResultDto> result5 = recruitmentService.getRecruitmentSearchResult("타이틀", RecruitmentStatusVisible.OPEN);
+        List<RecruitmentSearchResultDto> result6 = recruitmentService.getRecruitmentSearchResult("제목", RecruitmentStatusVisible.CLOSE);
+        List<RecruitmentSearchResultDto> result7 = recruitmentService.getRecruitmentSearchResult("3", null);
+        List<RecruitmentSearchResultDto> result8 = recruitmentService.getRecruitmentSearchResult("3", RecruitmentStatusVisible.OPEN);
+        List<RecruitmentSearchResultDto> result9 = recruitmentService.getRecruitmentSearchResult(null, RecruitmentStatusVisible.OPEN);
+        List<RecruitmentSearchResultDto> result10 = recruitmentService.getRecruitmentSearchResult(null, RecruitmentStatusVisible.CLOSE);
+
+        assertThat(result1.size()).isEqualTo(6);
+        assertThat(result2.size()).isEqualTo(3);
+        assertThat(result3.size()).isEqualTo(3);
+        assertThat(result4.size()).isEqualTo(2);
+        assertThat(result5.size()).isEqualTo(2);
+        assertThat(result6.size()).isEqualTo(1);
+        assertThat(result7.size()).isEqualTo(2);
+        assertThat(result8.size()).isEqualTo(1);
+        assertThat(result9.size()).isEqualTo(4);
+        assertThat(result10.size()).isEqualTo(2);
     }
 
     @Test
-    void 게시물_삭제_실패_게시글존재X(){
+    void 게시물_리오픈_실패_게시글존재X(){
         Recruitment recruitment = recruitmentRepository.save(Recruitment.builder()
                 .teamId(team.getId())
                 .title("테스트 제목")
@@ -137,14 +176,14 @@ public class RecruitmentDeleteTest {
                 .build());
 
         NotFoundException ex = assertThrows(NotFoundException.class,
-                () -> recruitmentService.deleteRecruitmentPost(leader.getId(), 100L));
+                () -> recruitmentService.reopenRecruitmentPost(leader.getId(), 100L));
 
         assertThat(ex.getMessage()).isEqualTo("존재하지 않는 게시글입니다.");
 
     }
 
     @Test
-    void 게시물_마감_실패_게시물_이미_삭제(){
+    void 게시물_리오픈_실패_게시물_이미_삭제(){
         Recruitment recruitment = recruitmentRepository.save(Recruitment.builder()
                 .teamId(team.getId())
                 .title("테스트 제목")
@@ -155,14 +194,14 @@ public class RecruitmentDeleteTest {
                 .build());
 
         NotFoundException ex = assertThrows(NotFoundException.class,
-                () -> recruitmentService.deleteRecruitmentPost(leader.getId(), recruitment.getId()));
+                () -> recruitmentService.reopenRecruitmentPost(leader.getId(), recruitment.getId()));
 
         assertThat(ex.getMessage()).isEqualTo("존재하지 않는 게시글입니다.");
 
     }
 
     @Test
-    void 게시물_마감_실패_리더X(){
+    void 게시물_리오픈_실패_리더X(){
         Recruitment recruitment = recruitmentRepository.save(Recruitment.builder()
                 .teamId(team.getId())
                 .title("테스트 제목")
@@ -173,7 +212,7 @@ public class RecruitmentDeleteTest {
                 .build());
 
         ForbiddenException forbiddenException = assertThrows(ForbiddenException.class,
-                () -> recruitmentService.deleteRecruitmentPost(member.getId(), recruitment.getId()));
+                () -> recruitmentService.reopenRecruitmentPost(member.getId(), recruitment.getId()));
         assertThat(forbiddenException.getMessage()).isEqualTo("해당 작업을 수행할 권한이 없습니다.");
 
     }

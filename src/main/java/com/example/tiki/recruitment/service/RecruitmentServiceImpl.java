@@ -2,22 +2,25 @@ package com.example.tiki.recruitment.service;
 
 import com.example.tiki.follow.domain.Follow;
 import com.example.tiki.follow.repository.FollowRepository;
-import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.dto.RecruitmentCreateRequest;
+import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
+import com.example.tiki.recruitment.dto.RecruitmentStatusVisible;
 import com.example.tiki.recruitment.dto.RecruitmentUpdateRequest;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.enums.TeamStatus;
+import com.example.tiki.team.repository.TeamRepository;
 import com.example.tiki.utils.CheckUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,6 +31,7 @@ public class RecruitmentServiceImpl implements RecruitmentService{
     private final RecruitmentRepository recruitmentRepository;
     private final FollowRepository followRepository;
     private final NotificationRepository notificationRepository;
+    private final TeamRepository teamRepository;
 
 
     // 모집글 등록
@@ -100,11 +104,38 @@ public class RecruitmentServiceImpl implements RecruitmentService{
         // 리더 권한 확인
         checkUtil.validateLeaderAuthority(userId, recruitment.getTeamId());
 
-        if(recruitment.getRecruitmentStatus() == RecruitmentStatus.DELETED) throw new IllegalStateException("삭제된 공고는 처리할 수 없습니다.");
-
         recruitment.deleted();
-    };
+    }
 
+    // 모집글 리오픈
+    public void reopenRecruitmentPost(Long userId, Long recruitmentId){
+        // 존재하는 모집 글인지 확인
+        Recruitment recruitment = checkUtil.validateAndGetRecruitment(recruitmentId);
 
+        // 리더 권한 확인
+        checkUtil.validateLeaderAuthority(userId, recruitment.getTeamId());
+
+        if(recruitment.getRecruitmentStatus() == RecruitmentStatus.OPEN) throw new IllegalStateException("이미 모집 중인 공고입니다.");
+
+        recruitment.reopen();
+    }
+
+    // 모집글 조회(키워드, 상태 필터)
+    public List<RecruitmentSearchResultDto> getRecruitmentSearchResult(String keyword, RecruitmentStatusVisible status) {
+        List<RecruitmentSearchResultDto> resultDtoList = new ArrayList<>();
+        keyword = keyword == null ? "" : keyword;
+        RecruitmentStatus recruitmentStatus = status == null ? null : status.toRecruitmentStatus();
+
+        List<Recruitment> recruitments = (status == null)
+                ? recruitmentRepository.findByTitleContainingAndRecruitmentStatusNot(keyword, RecruitmentStatus.DELETED)
+                : recruitmentRepository.findByTitleContainingAndRecruitmentStatus(keyword, recruitmentStatus);
+
+        for (Recruitment recruitment : recruitments) {
+            Team team = checkUtil.validateAndGetTeam(recruitment.getTeamId());
+            resultDtoList.add(RecruitmentSearchResultDto.from(recruitment,team));
+        }
+        return resultDtoList;
+
+    }
 
 }

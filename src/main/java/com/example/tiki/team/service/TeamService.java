@@ -17,7 +17,7 @@ public interface TeamService {
     List<MyTeam> getMyTeam(Long userId, TeamStatus status);
 
     // 팀 조회
-    List<TeamDto> findTeams(TeamStatus teamStatus);
+    List<TeamDto> getTeamSearchResult(String keyword, TeamStatusVisible teamStatusVisible);
 
     // 팀 생성
     void createTeam(Long userId, TeamCreateRequestDto teamCreateRequestDto);
