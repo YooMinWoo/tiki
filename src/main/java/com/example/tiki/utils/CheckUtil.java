@@ -2,6 +2,9 @@ package com.example.tiki.utils;
 
 import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
+import com.example.tiki.match.domain.entity.MatchPost;
+import com.example.tiki.match.domain.enums.MatchStatus;
+import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
@@ -24,6 +27,7 @@ public class CheckUtil {
     private final TeamRepository teamRepository;
     private final TeamUserRepository teamUserRepository;
     private final RecruitmentRepository recruitmentRepository;
+    private final MatchPostRepository matchPostRepository;
 
     // 팀이 존재하는지 확인
     public Team validateAndGetTeam(Long teamId) {
@@ -38,6 +42,14 @@ public class CheckUtil {
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
         if(recruitment.getRecruitmentStatus() == RecruitmentStatus.DELETED) throw new NotFoundException("존재하지 않는 게시글입니다.");
         return recruitment;
+    }
+
+    // 매칭글이 존재하는지 확인
+    public MatchPost validateAndGetMatchPost(Long matchPostId){
+        MatchPost matchPost = matchPostRepository.findById(matchPostId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
+        if(matchPost.getMatchStatus() == MatchStatus.DELETED) throw new NotFoundException("존재하지 않는 게시글입니다.");
+        return matchPost;
     }
 
     // 수행하려는 주체의 권한이 리더인지 확인

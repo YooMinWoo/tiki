@@ -8,6 +8,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -29,9 +30,8 @@ public class MatchPost extends BaseEntity {
     private String title;
     private String content;
 
-    private LocalDate matchDate;  // 경기 날짜
-    private LocalTime startTime;  // 경기 시작 시각 (예: 08:00)
-    private LocalTime endTime;    // 경기 종료 시각 (예: 10:00)
+    private LocalDateTime startTime;  // 경기 시작 시각 (예: 08:00)
+    private LocalDateTime endTime;    // 경기 종료 시각 (예: 10:00)
 
     @Enumerated(EnumType.STRING)
     private MatchStatus matchStatus;
@@ -45,12 +45,15 @@ public class MatchPost extends BaseEntity {
     private Double latitude;        // 위도
     private Double longitude;       // 경도
 
+    public String getFullAddress(){
+        return region + " " + city + " " + roadName + " " + buildingNumber;
+    }
+
     public static MatchPost create(MatchPostRequest request, Double latitude, Double longitude){
         return MatchPost.builder()
                 .hostTeamId(request.getHostTeamId())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .matchDate(request.getMatchDate())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
                 .matchStatus(MatchStatus.OPEN)
@@ -62,5 +65,25 @@ public class MatchPost extends BaseEntity {
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
+    }
+
+    public void update(MatchPostRequest request, Double latitude, Double longitude) {
+        title = request.getTitle();
+        content = request.getContent();
+        startTime = request.getStartTime();
+        endTime = request.getEndTime();
+
+        region = request.getRegion();
+        city = request.getCity();
+        roadName = request.getRoadName();
+        buildingNumber = request.getBuildingNumber();
+        detailAddress = request.getDetailAddress();
+
+        if(latitude != null) this.latitude = latitude;
+        if(longitude != null) this.longitude = longitude;
+    }
+
+    public void changeStatus(MatchStatus matchStatus){
+        this.matchStatus = matchStatus;
     }
 }

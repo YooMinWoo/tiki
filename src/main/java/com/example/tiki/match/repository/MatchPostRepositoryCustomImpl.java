@@ -8,6 +8,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class MatchPostRepositoryCustomImpl implements MatchPostRepositoryCustom{
 
         // 날짜 검색 (matchDate)
         if(condition.getMatchDate() == null) condition.setMatchDate(LocalDate.now());
-        builder.and(matchPost.matchDate.eq(condition.getMatchDate()));
+        builder.and(matchPost.startTime.between(condition.getMatchDate().atStartOfDay(), condition.getMatchDate().atTime(LocalTime.MAX)));
 
         // status 조건 (null이면 전체)
         if(condition.getStatus() != null){

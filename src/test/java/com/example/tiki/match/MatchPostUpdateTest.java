@@ -3,18 +3,17 @@ package com.example.tiki.match;
 import com.example.tiki.auth.domain.Role;
 import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.repository.AuthRepository;
-import com.example.tiki.follow.domain.Follow;
-import com.example.tiki.follow.repository.FollowRepository;
+import com.example.tiki.global.exception.ForbiddenException;
+import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.match.domain.entity.MatchPost;
 import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.dto.MatchPostRequest;
+import com.example.tiki.match.dto.MatchPostSearchCondition;
+import com.example.tiki.match.dto.MatchPostSearchResponse;
+import com.example.tiki.match.dto.MatchPostStatusVisible;
 import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.match.service.MatchService;
 import com.example.tiki.notifircation.domain.Notification;
-import com.example.tiki.notifircation.domain.NotificationType;
-import com.example.tiki.notifircation.repository.NotificationRepository;
-import com.example.tiki.recruitment.repository.RecruitmentRepository;
-import com.example.tiki.recruitment.service.RecruitmentService;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.enums.TeamStatus;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -38,13 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
-public class MatchPostCreateTest {
-
-    @Autowired
-    private RecruitmentService recruitmentService;
-
-    @Autowired
-    private RecruitmentRepository recruitmentRepository;
+public class MatchPostUpdateTest {
 
     @Autowired
     private AuthRepository authRepository;
@@ -54,12 +46,6 @@ public class MatchPostCreateTest {
 
     @Autowired
     private TeamUserRepository teamUserRepository;
-
-    @Autowired
-    private FollowRepository followRepository;
-
-    @Autowired
-    private NotificationRepository notificationRepository;
 
     @Autowired
     private MatchService matchService;
@@ -101,16 +87,11 @@ public class MatchPostCreateTest {
                 .teamUserStatus(TeamUserStatus.APPROVED)
                 .build());
 
-        followRepository.save(Follow.builder()
-                .userId(member.getId())
-                .teamId(team.getId())
-                .build());
-
     }
 
     @Test
-    void 매칭글_생성_성공(){
-        MatchPostRequest request = MatchPostRequest.builder()
+    void 매칭글_수정_성공(){
+        MatchPostRequest beforeRequest = MatchPostRequest.builder()
                 .hostTeamId(team.getId())
                 .title("매칭글 테스트 제목")
                 .content("매칭글 테스트 내용")
@@ -123,31 +104,20 @@ public class MatchPostCreateTest {
                 .detailAddress("동아아파트 4동 608호")
                 .build();
 
-        matchService.createMatchPost(leader.getId(), request);
+        matchService.createMatchPost(leader.getId(), beforeRequest);
 
         MatchPost matchPost = matchPostRepository.findAll().get(0);
-        Notification notification = notificationRepository.findAll().get(0);
+        String beforeAddress = matchPost.getFullAddress();
+        String beforeTitle = matchPost.getTitle();
+        String beforeContent = matchPost.getContent();
+        Double beforeLatitude = matchPost.getLatitude();
+        Double beforeLongitude = matchPost.getLongitude();
 
-        assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.OPEN);
-        assertThat(matchPost.getTitle()).isEqualTo(request.getTitle());
-        assertThat(matchPost.getContent()).isEqualTo(request.getContent());
-        assertThat(matchPost.getLatitude()).isEqualTo(37.4528915781653);
-        assertThat(matchPost.getLongitude()).isEqualTo(126.644416664576);
-
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
-
-        System.out.println(matchPost.getMatchStatus());
-    }
-
-    @Test
-    void 매칭글_생성_실패_시작시간_마감시간_오기재(){
-        MatchPostRequest request = MatchPostRequest.builder()
+        MatchPostRequest afterRequest = MatchPostRequest.builder()
                 .hostTeamId(team.getId())
-                .title("매칭글 테스트 제목")
-                .content("매칭글 테스트 내용")
-                .startTime(LocalDateTime.of(2025,5,27,14, 0))
+                .title("매칭글 테스트 제목 변경")
+                .content("매칭글 테스트 내용 변경")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
                 .endTime(LocalDateTime.of(2025,5,27,12, 0))
                 .region("인천광역시")
                 .city("미추홀구")
@@ -155,8 +125,60 @@ public class MatchPostCreateTest {
                 .buildingNumber("82")
                 .detailAddress("동아아파트 4동 608호")
                 .build();
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> matchService.createMatchPost(leader.getId(), request));
-        assertThat(ex.getMessage()).isEqualTo("종료시간은 시작시간과 같거나 빠를 수 없습니다.");
+
+        matchService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest);
+
+        String afterAddress = matchPost.getFullAddress();
+        String afterTitle = matchPost.getTitle();
+        String afterContent = matchPost.getContent();
+        Double afterLatitude = matchPost.getLatitude();
+        Double afterLongitude = matchPost.getLongitude();
+
+        assertThat(beforeAddress).isNotEqualTo(afterAddress);
+        assertThat(beforeTitle).isNotEqualTo(afterTitle);
+        assertThat(beforeContent).isNotEqualTo(afterContent);
+        assertThat(beforeLatitude).isNotEqualTo(afterLatitude);
+        assertThat(beforeLongitude).isNotEqualTo(afterLongitude);
     }
+
+    @Test
+    void 매칭글_수정_실패(){
+        MatchPostRequest beforeRequest = MatchPostRequest.builder()
+                .hostTeamId(team.getId())
+                .title("매칭글 테스트 제목")
+                .content("매칭글 테스트 내용")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
+                .region("인천광역시")
+                .city("미추홀구")
+                .roadName("용오로")
+                .buildingNumber("82")
+                .detailAddress("동아아파트 4동 608호")
+                .build();
+
+        matchService.createMatchPost(leader.getId(), beforeRequest);
+
+        MatchPost matchPost = matchPostRepository.findAll().get(0);
+
+        MatchPostRequest afterRequest = MatchPostRequest.builder()
+                .hostTeamId(team.getId())
+                .title("매칭글 테스트 제목 변경")
+                .content("매칭글 테스트 내용 변경")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
+                .region("인천광역시")
+                .city("미추홀구")
+                .roadName("용오로")
+                .buildingNumber("82")
+                .detailAddress("동아아파트 4동 608호")
+                .build();
+
+        assertThrows(NotFoundException.class, () -> matchService.updateMatchPost(leader.getId(), 100L, afterRequest));
+        afterRequest.setHostTeamId(100L);
+        assertThrows(ForbiddenException.class, () -> matchService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest));
+        afterRequest.setHostTeamId(team.getId());
+        matchPost.changeStatus(MatchStatus.MATCHED);
+        assertThrows(IllegalStateException.class, () -> matchService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest));
+    }
+
 }

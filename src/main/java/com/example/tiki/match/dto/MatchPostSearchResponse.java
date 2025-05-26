@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
@@ -18,9 +19,9 @@ public class MatchPostSearchResponse {
 
     private String title;
 
-    private LocalDate matchDate;  // 경기 날짜
-    private LocalTime startTime;  // 경기 시작 시각 (예: 08:00)
-    private LocalTime endTime;    // 경기 종료 시각 (예: 10:00)
+//    private LocalDate matchDate;  // 경기 날짜
+    private LocalDateTime startTime;  // 경기 시작 시각 (예: 08:00)
+    private LocalDateTime endTime;    // 경기 종료 시각 (예: 10:00)
 
     private String region;          // 시/도
 
@@ -31,7 +32,6 @@ public class MatchPostSearchResponse {
                 .hostTeamId(matchPost.getHostTeamId())
                 .hostTeamName(hostTeamName)
                 .title(matchPost.getTitle())
-                .matchDate(matchPost.getMatchDate())
                 .startTime(matchPost.getStartTime())
                 .endTime(matchPost.getEndTime())
                 .region(matchPost.getRegion())

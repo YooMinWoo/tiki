@@ -32,6 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -98,36 +99,32 @@ public class MatchPostSearchTest {
         MatchPost post1 = MatchPost.builder()
                 .hostTeamId(team.getId())
                 .title("매칭 모집합니다 111")
-                .matchDate(LocalDate.now())
-                .startTime(LocalTime.of(10, 0))
-                .endTime(LocalTime.of(12, 0))
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
                 .region("서울")
                 .matchStatus(MatchStatus.OPEN)
                 .build();
         MatchPost post2 = MatchPost.builder()
                 .hostTeamId(team.getId())
                 .title("매칭 모집합니다 222")
-                .matchDate(LocalDate.now())
-                .startTime(LocalTime.of(12, 0))
-                .endTime(LocalTime.of(14, 0))
+                .startTime(LocalDateTime.of(2025,5,27,12, 0))
+                .endTime(LocalDateTime.of(2025,5,27,14, 0))
                 .region("인천")
                 .matchStatus(MatchStatus.OPEN)
                 .build();
         MatchPost post3 = MatchPost.builder()
                 .hostTeamId(team.getId())
                 .title("매칭 모집합니다 333")
-                .matchDate(LocalDate.now())
-                .startTime(LocalTime.of(14, 0))
-                .endTime(LocalTime.of(16, 0))
+                .startTime(LocalDateTime.of(2025,5,27,14, 0))
+                .endTime(LocalDateTime.of(2025,5,27,16, 0))
                 .region("인천")
                 .matchStatus(MatchStatus.OPEN)
                 .build();
         MatchPost post4 = MatchPost.builder()
                 .hostTeamId(team.getId())
                 .title("매칭 모집합니다 444")
-                .matchDate(LocalDate.now())
-                .startTime(LocalTime.of(16, 0))
-                .endTime(LocalTime.of(18, 0))
+                .startTime(LocalDateTime.of(2025,5,27,16, 0))
+                .endTime(LocalDateTime.of(2025,5,27,18, 0))
                 .region("인천")
                 .matchStatus(MatchStatus.MATCHED)
                 .build();
@@ -138,14 +135,14 @@ public class MatchPostSearchTest {
 
         MatchPostSearchCondition condition1 = MatchPostSearchCondition.builder()
                 .keyword("")
-                .matchDate(LocalDate.now())
+                .matchDate(LocalDate.of(2025,5,27))
                 .region("")
                 .status(MatchPostStatusVisible.OPEN)
                 .build();
 
         MatchPostSearchCondition condition2 = MatchPostSearchCondition.builder()
                 .keyword("2")
-                .matchDate(LocalDate.now())
+                .matchDate(LocalDate.of(2025,5,27))
                 .region("")
                 .status(MatchPostStatusVisible.OPEN)
                 .build();
@@ -159,7 +156,7 @@ public class MatchPostSearchTest {
 
         MatchPostSearchCondition condition4 = MatchPostSearchCondition.builder()
 //                .keyword("2")
-//                .matchDate(LocalDate.now())
+                .matchDate(LocalDate.of(2025,5,27))
                 .region("인천")
 //                .status(MatchPostStatusVisible.OPEN)
                 .build();
@@ -170,7 +167,7 @@ public class MatchPostSearchTest {
         List<MatchPostSearchResponse> result4 = matchService.searchMatchPost(condition4);
         assertThat(result1.size()).isEqualTo(3);
         assertThat(result2.size()).isEqualTo(1);
-        assertThat(result3.size()).isEqualTo(1);
+        assertThat(result3.size()).isEqualTo(0);
         assertThat(result4.size()).isEqualTo(3);
     }
 

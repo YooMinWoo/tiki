@@ -34,7 +34,7 @@ public class QMatchPost extends EntityPathBase<MatchPost> {
 
     public final StringPath detailAddress = createString("detailAddress");
 
-    public final TimePath<java.time.LocalTime> endTime = createTime("endTime", java.time.LocalTime.class);
+    public final DateTimePath<java.time.LocalDateTime> endTime = createDateTime("endTime", java.time.LocalDateTime.class);
 
     public final NumberPath<Long> hostTeamId = createNumber("hostTeamId", Long.class);
 
@@ -47,15 +47,13 @@ public class QMatchPost extends EntityPathBase<MatchPost> {
 
     public final NumberPath<Double> longitude = createNumber("longitude", Double.class);
 
-    public final DatePath<java.time.LocalDate> matchDate = createDate("matchDate", java.time.LocalDate.class);
-
     public final EnumPath<com.example.tiki.match.domain.enums.MatchStatus> matchStatus = createEnum("matchStatus", com.example.tiki.match.domain.enums.MatchStatus.class);
 
     public final StringPath region = createString("region");
 
     public final StringPath roadName = createString("roadName");
 
-    public final TimePath<java.time.LocalTime> startTime = createTime("startTime", java.time.LocalTime.class);
+    public final DateTimePath<java.time.LocalDateTime> startTime = createDateTime("startTime", java.time.LocalDateTime.class);
 
     public final StringPath title = createString("title");
 

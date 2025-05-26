@@ -4,7 +4,9 @@ import com.example.tiki.api.kakao.GeoCoordinate;
 import com.example.tiki.api.kakao.KakaoMapService;
 import com.example.tiki.follow.domain.Follow;
 import com.example.tiki.follow.repository.FollowRepository;
+import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.match.domain.entity.MatchPost;
+import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.dto.MatchPostSearchResponse;
 import com.example.tiki.match.dto.MatchPostRequest;
 import com.example.tiki.match.dto.MatchPostSearchCondition;
@@ -85,6 +87,45 @@ public class MatchServiceImpl implements MatchService {
             result.add(MatchPostSearchResponse.from(matchPost, hostTeam.getTeamName()));
         }
         return result;
+    }
+
+    // 매칭글 수정
+    @Override
+    @Transactional
+    public void updateMatchPost(Long userId, Long matchPostId, MatchPostRequest request) {
+        // 존재하는 매칭글인지 확인
+        MatchPost matchPost = checkUtil.validateAndGetMatchPost(matchPostId);
+
+        // 팀이 일치하는지 확인
+        if(request.getHostTeamId() != matchPost.getHostTeamId()) throw new ForbiddenException("접근 권한이 없습니다.");
+
+        // 팀 entity 가져오기
+        Team team = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+
+        // 매칭글이 활성화 상태인지 확인 (OPEN이 아닐 경우 수정 불가능)
+        if(matchPost.getMatchStatus() != MatchStatus.OPEN) throw new IllegalStateException("수정이 불가능한 상태입니다.");
+
+        // 수행하려는 주체의 권한이 리더인지 확인
+        checkUtil.validateLeaderAuthority(userId, team.getId());
+
+        // 시작시간 < 종료시간
+        if(!request.getStartTime().isBefore(request.getEndTime())) throw new IllegalArgumentException("종료시간은 시작시간과 같거나 빠를 수 없습니다.");
+
+        Double latitude = null;
+        Double longitude = null;
+
+        // 주소가 변경되었으면 update
+        if(!matchPost.getFullAddress().equals(getFullAddress(request))){
+            // 카카오 맵 API 호출(위도,경도 가져오기)
+            GeoCoordinate geoCoordinate = kakaoMapService.getCoordinates(getFullAddress(request)).block();
+
+            // 위도 추출
+            latitude = geoCoordinate.getLatitude();
+
+            // 경도 추출
+            longitude = geoCoordinate.getLongitude();
+        }
+        matchPost.update(request, latitude, longitude);
     }
 
     private String getFullAddress(MatchPostRequest request){
