@@ -1,7 +1,8 @@
 package com.example.tiki.notifircation.domain;
 
 public enum NotificationType {
-    MATCH,      // 매칭 글
+    MATCHPOST,      // 매칭 글
+    MATCHREQUEST,      // 매칭 신청
     FOLLOW,     // 팔로우
     RECRUIT,    // 모집 글
     JOIN,        // 가입

@@ -2,6 +2,7 @@ package com.example.tiki.match.domain.entity;
 
 import com.example.tiki.global.entity.BaseEntity;
 import com.example.tiki.match.domain.enums.MatchStatus;
+import com.example.tiki.match.dto.MatchPostRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -44,4 +45,22 @@ public class MatchPost extends BaseEntity {
     private Double latitude;        // 위도
     private Double longitude;       // 경도
 
+    public static MatchPost create(MatchPostRequest request, Double latitude, Double longitude){
+        return MatchPost.builder()
+                .hostTeamId(request.getHostTeamId())
+                .title(request.getTitle())
+                .content(request.getContent())
+                .matchDate(request.getMatchDate())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .matchStatus(MatchStatus.OPEN)
+                .region(request.getRegion())
+                .city(request.getCity())
+                .roadName(request.getRoadName())
+                .buildingNumber(request.getBuildingNumber())
+                .detailAddress(request.getDetailAddress())
+                .latitude(latitude)
+                .longitude(longitude)
+                .build();
+    }
 }
