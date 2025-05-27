@@ -6,10 +6,14 @@ import com.example.tiki.auth.repository.AuthRepository;
 import com.example.tiki.follow.domain.Follow;
 import com.example.tiki.follow.repository.FollowRepository;
 import com.example.tiki.match.domain.entity.MatchPost;
+import com.example.tiki.match.domain.entity.MatchRequest;
 import com.example.tiki.match.domain.enums.MatchStatus;
+import com.example.tiki.match.domain.enums.RequestStatus;
 import com.example.tiki.match.dto.MatchPostRequest;
 import com.example.tiki.match.repository.MatchPostRepository;
+import com.example.tiki.match.repository.MatchRequestRepository;
 import com.example.tiki.match.service.MatchPostService;
+import com.example.tiki.match.service.MatchRequestService;
 import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
@@ -35,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
-public class MatchPostCreateTest {
+public class MatchRequestCreateTest {
 
     @Autowired
     private RecruitmentService recruitmentService;
@@ -53,9 +57,6 @@ public class MatchPostCreateTest {
     private TeamUserRepository teamUserRepository;
 
     @Autowired
-    private FollowRepository followRepository;
-
-    @Autowired
     private NotificationRepository notificationRepository;
 
     @Autowired
@@ -64,9 +65,16 @@ public class MatchPostCreateTest {
     @Autowired
     private MatchPostRepository matchPostRepository;
 
+    @Autowired
+    private MatchRequestRepository matchRequestRepository;
+
+    @Autowired
+    private MatchRequestService matchRequestService;
+
     private User leader;
     private User member;
     private Team team;
+    private Team team2;
 
     @BeforeEach
     void 더미데이터_생성(){
@@ -91,6 +99,13 @@ public class MatchPostCreateTest {
                         .teamStatus(TeamStatus.ACTIVE)
                         .build());
 
+        team2 = teamRepository.save(
+                Team.builder()
+                        .teamName("테스트 팀2")
+                        .teamDescription("테스트 설명2")
+                        .teamStatus(TeamStatus.ACTIVE)
+                        .build());
+
         teamUserRepository.save(TeamUser.builder()
                 .userId(leader.getId())
                 .teamId(team.getId())
@@ -98,44 +113,44 @@ public class MatchPostCreateTest {
                 .teamUserStatus(TeamUserStatus.APPROVED)
                 .build());
 
-        followRepository.save(Follow.builder()
+        teamUserRepository.save(TeamUser.builder()
                 .userId(member.getId())
-                .teamId(team.getId())
+                .teamId(team2.getId())
+                .teamUserRole(TeamUserRole.ROLE_LEADER)
+                .teamUserStatus(TeamUserStatus.APPROVED)
                 .build());
 
     }
 
     @Test
-    void 매칭글_생성_성공(){
-        MatchPostRequest request = MatchPostRequest.builder()
+    void 매칭요청_성공(){
+        MatchPost matchPost = MatchPost.builder()
                 .hostTeamId(team.getId())
-                .title("매칭글 테스트 제목")
-                .content("매칭글 테스트 내용")
+                .title("매칭 모집합니다 111")
                 .startTime(LocalDateTime.of(2025,5,27,10, 0))
                 .endTime(LocalDateTime.of(2025,5,27,12, 0))
-                .region("인천광역시")
-                .city("미추홀구")
-                .roadName("용오로")
-                .buildingNumber("82")
-                .detailAddress("동아아파트 4동 608호")
+                .region("서울")
+                .matchStatus(MatchStatus.OPEN)
                 .build();
 
-        matchPostService.createMatchPost(leader.getId(), request);
+        matchPostRepository.save(matchPost);
 
-        MatchPost matchPost = matchPostRepository.findAll().get(0);
-        Notification notification = notificationRepository.findAll().get(0);
+        matchRequestService.applyForMatch(member.getId(), team2.getId(), matchPost.getId());
+
+        Notification notification = notificationRepository.findByUserId(leader.getId()).get(0);
+        MatchRequest matchRequest = matchRequestRepository.findAll().get(0);
 
         assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.OPEN);
-        assertThat(matchPost.getTitle()).isEqualTo(request.getTitle());
-        assertThat(matchPost.getContent()).isEqualTo(request.getContent());
-        assertThat(matchPost.getLatitude()).isEqualTo(37.4528915781653);
-        assertThat(matchPost.getLongitude()).isEqualTo(126.644416664576);
 
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
+        assertThat(matchRequest.getMatchPostId()).isEqualTo(matchPost.getId());
+        assertThat(matchRequest.getApplicantTeamId()).isEqualTo(team2.getId());
+        assertThat(matchRequest.getRequestStatus()).isEqualTo(RequestStatus.PENDING);
 
-        System.out.println(matchPost.getMatchStatus());
+        assertThat(notification.getTargetId()).isEqualTo(team2.getId());
+        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHREQUEST);
+        assertThat(notification.getUserId()).isEqualTo(leader.getId());
+
+        System.out.println(notification.getMessage());
     }
 
     @Test

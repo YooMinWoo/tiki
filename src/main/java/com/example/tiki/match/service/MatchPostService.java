@@ -1,15 +1,11 @@
 package com.example.tiki.match.service;
 
 
-import com.example.tiki.match.domain.entity.MatchPost;
-import com.example.tiki.match.dto.MatchPostRequest;
-import com.example.tiki.match.dto.MatchPostResponse;
-import com.example.tiki.match.dto.MatchPostSearchCondition;
-import com.example.tiki.match.dto.MatchPostSearchResponse;
+import com.example.tiki.match.dto.*;
 
 import java.util.List;
 
-public interface MatchService {
+public interface MatchPostService {
 
     // 매칭글 생성
     void createMatchPost(Long userId, MatchPostRequest request);
@@ -19,4 +15,13 @@ public interface MatchService {
 
     // 매칭글 수정
     void updateMatchPost(Long userId, Long matchPostId, MatchPostRequest request);
+
+    // 매칭글 삭제
+    void deleteMatchPost(Long userId, Long matchPostId);
+
+    // 팀 별 매칭글 내역 조회
+    List<MatchPostSearchResponse> searchMatchPostByTeam(Long teamId, MatchPostByTeamSearchCondition condition);
+
+    // 매칭글 상세 조회
+    MatchPostResponse getMatchPostDetail(Long matchPostId);
 }

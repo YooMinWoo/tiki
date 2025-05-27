@@ -49,6 +49,11 @@ public class MatchPost extends BaseEntity {
         return region + " " + city + " " + roadName + " " + buildingNumber;
     }
 
+    public void approveMatch(Long applicantTeamId){
+        this.matchStatus = MatchStatus.MATCHED;
+        this.applicantTeamId = applicantTeamId;
+    }
+
     public static MatchPost create(MatchPostRequest request, Double latitude, Double longitude){
         return MatchPost.builder()
                 .hostTeamId(request.getHostTeamId())

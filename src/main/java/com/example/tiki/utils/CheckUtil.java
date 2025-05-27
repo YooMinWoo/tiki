@@ -3,8 +3,11 @@ package com.example.tiki.utils;
 import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.match.domain.entity.MatchPost;
+import com.example.tiki.match.domain.entity.MatchRequest;
 import com.example.tiki.match.domain.enums.MatchStatus;
+import com.example.tiki.match.domain.enums.RequestStatus;
 import com.example.tiki.match.repository.MatchPostRepository;
+import com.example.tiki.match.repository.MatchRequestRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
@@ -28,6 +31,7 @@ public class CheckUtil {
     private final TeamUserRepository teamUserRepository;
     private final RecruitmentRepository recruitmentRepository;
     private final MatchPostRepository matchPostRepository;
+    private final MatchRequestRepository matchRequestRepository;
 
     // 팀이 존재하는지 확인
     public Team validateAndGetTeam(Long teamId) {
@@ -36,6 +40,7 @@ public class CheckUtil {
         if(team.getTeamStatus() == TeamStatus.DISBANDED) throw new NotFoundException("해당 팀은 존재하지 않습니다.");
         return team;
     }
+
     // 모집글이 존재하는지 확인
     public Recruitment validateAndGetRecruitment(Long recruitmentId){
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
@@ -64,5 +69,12 @@ public class CheckUtil {
         TeamUser teamUser = teamUserRepository.findByUserIdAndTeamIdAndTeamUserStatus(userId, teamId, teamUserStatus)
                 .orElseThrow(() -> new ForbiddenException("해당 상태의 유저를 찾을 수 없습니다."));
         return teamUser;
+    }
+
+    public MatchRequest getPendingMatchRequest(Long matchRequestId) {
+        MatchRequest matchRequest = matchRequestRepository.findById(matchRequestId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 매칭 신청입니다."));
+        if(matchRequest.getRequestStatus() != RequestStatus.PENDING) throw new IllegalArgumentException("현재 대기중인 상태의 매칭 신청이 아닙니다.");
+        return matchRequest;
     }
 }

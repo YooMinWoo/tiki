@@ -7,9 +7,7 @@ import com.example.tiki.follow.repository.FollowRepository;
 import com.example.tiki.global.exception.ForbiddenException;
 import com.example.tiki.match.domain.entity.MatchPost;
 import com.example.tiki.match.domain.enums.MatchStatus;
-import com.example.tiki.match.dto.MatchPostSearchResponse;
-import com.example.tiki.match.dto.MatchPostRequest;
-import com.example.tiki.match.dto.MatchPostSearchCondition;
+import com.example.tiki.match.dto.*;
 import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.match.repository.MatchRequestRepository;
 import com.example.tiki.notifircation.domain.Notification;
@@ -27,7 +25,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MatchServiceImpl implements MatchService {
+public class MatchPostServiceImpl implements MatchPostService {
 
     private final CheckUtil checkUtil;
     private final KakaoMapService kakaoMapService;
@@ -127,6 +125,56 @@ public class MatchServiceImpl implements MatchService {
         }
         matchPost.update(request, latitude, longitude);
     }
+
+
+    // 매칭글 삭제
+    @Override
+    @Transactional
+    public void deleteMatchPost(Long userId, Long matchPostId) {
+        // 존재하는 매칭글인지 확인
+        MatchPost matchPost = checkUtil.validateAndGetMatchPost(matchPostId);
+
+        // 팀 entity 가져오기
+        Team team = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+
+        // 수행하려는 주체의 권한이 리더인지 확인
+        checkUtil.validateLeaderAuthority(userId, team.getId());
+
+        // 매칭 성사 완료 상태인지 확인 (MATCHED일 경우 삭제 불가능)
+        if(matchPost.getMatchStatus() != MatchStatus.OPEN) throw new IllegalStateException("삭제가 불가능합니다.");
+
+        matchPost.changeStatus(MatchStatus.DELETED);
+    }
+
+    // 팀 별 매칭글 내역 조회
+    @Override
+    public List<MatchPostSearchResponse> searchMatchPostByTeam(Long teamId, MatchPostByTeamSearchCondition condition) {
+        List<MatchPostSearchResponse> result = new ArrayList<>();
+        List<MatchPost> matchPosts = matchPostRepository.searchByTeam(teamId, condition);
+        for (MatchPost matchPost : matchPosts) {
+            Team hostTeam = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+            result.add(MatchPostSearchResponse.from(matchPost, hostTeam.getTeamName()));
+        }
+        return result;
+    }
+
+    @Override
+    public MatchPostResponse getMatchPostDetail(Long matchPostId) {
+        // 존재하는 매칭글인지 확인
+        MatchPost matchPost = checkUtil.validateAndGetMatchPost(matchPostId);
+
+        // 팀 entity 가져오기
+        Team hostTeam = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+        Team applicantTeam = null;
+
+        // 상대팀 entity 가져오기
+        if(matchPost.getApplicantTeamId() != null){
+            applicantTeam = checkUtil.validateAndGetTeam(matchPost.getApplicantTeamId());
+        }
+
+        return MatchPostResponse.create(matchPost, hostTeam, applicantTeam);
+    }
+
 
     private String getFullAddress(MatchPostRequest request){
         String region = request.getRegion();

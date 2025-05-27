@@ -249,7 +249,7 @@ public class TeamServiceImpl implements TeamService {
 
         notificationRepository.save(Notification.builder()
                 .userId(leaderTeamUser.getUserId())
-                .message(user.getId() + "(" + user.getEmail() + ")님께서 가입 요청을 보냈습니다.")
+                .message(user.getName() + "(" + user.getEmail() + ")님께서 가입 요청을 보냈습니다.")
                 .notificationType(NotificationType.JOIN)
                 .targetId(user.getId())
                 .build());

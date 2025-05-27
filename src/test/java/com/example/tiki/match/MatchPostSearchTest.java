@@ -3,21 +3,11 @@ package com.example.tiki.match;
 import com.example.tiki.auth.domain.Role;
 import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.repository.AuthRepository;
-import com.example.tiki.follow.domain.Follow;
-import com.example.tiki.follow.repository.FollowRepository;
 import com.example.tiki.match.domain.entity.MatchPost;
 import com.example.tiki.match.domain.enums.MatchStatus;
-import com.example.tiki.match.dto.MatchPostRequest;
-import com.example.tiki.match.dto.MatchPostSearchCondition;
-import com.example.tiki.match.dto.MatchPostSearchResponse;
-import com.example.tiki.match.dto.MatchPostStatusVisible;
+import com.example.tiki.match.dto.*;
 import com.example.tiki.match.repository.MatchPostRepository;
-import com.example.tiki.match.service.MatchService;
-import com.example.tiki.notifircation.domain.Notification;
-import com.example.tiki.notifircation.domain.NotificationType;
-import com.example.tiki.notifircation.repository.NotificationRepository;
-import com.example.tiki.recruitment.repository.RecruitmentRepository;
-import com.example.tiki.recruitment.service.RecruitmentService;
+import com.example.tiki.match.service.MatchPostService;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.enums.TeamStatus;
@@ -33,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -53,7 +42,7 @@ public class MatchPostSearchTest {
     private TeamUserRepository teamUserRepository;
 
     @Autowired
-    private MatchService matchService;
+    private MatchPostService matchPostService;
 
     @Autowired
     private MatchPostRepository matchPostRepository;
@@ -161,14 +150,156 @@ public class MatchPostSearchTest {
 //                .status(MatchPostStatusVisible.OPEN)
                 .build();
 
-        List<MatchPostSearchResponse> result1 = matchService.searchMatchPost(condition1);
-        List<MatchPostSearchResponse> result2 = matchService.searchMatchPost(condition2);
-        List<MatchPostSearchResponse> result3 = matchService.searchMatchPost(condition3);
-        List<MatchPostSearchResponse> result4 = matchService.searchMatchPost(condition4);
+        List<MatchPostSearchResponse> result1 = matchPostService.searchMatchPost(condition1);
+        List<MatchPostSearchResponse> result2 = matchPostService.searchMatchPost(condition2);
+        List<MatchPostSearchResponse> result3 = matchPostService.searchMatchPost(condition3);
+        List<MatchPostSearchResponse> result4 = matchPostService.searchMatchPost(condition4);
         assertThat(result1.size()).isEqualTo(3);
         assertThat(result2.size()).isEqualTo(1);
         assertThat(result3.size()).isEqualTo(0);
         assertThat(result4.size()).isEqualTo(3);
+    }
+
+    @Test
+    void 매칭글_팀별_조회_성공(){
+        Team team2 = teamRepository.save(
+                Team.builder()
+                        .teamName("테스트 팀")
+                        .teamDescription("테스트 설명")
+                        .teamStatus(TeamStatus.ACTIVE)
+                        .build());
+
+        MatchPost post1 = MatchPost.builder()
+                .hostTeamId(team.getId())
+                .title("매칭 모집합니다 111")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
+                .region("서울")
+                .matchStatus(MatchStatus.OPEN)
+                .build();
+        MatchPost post2 = MatchPost.builder()
+                .hostTeamId(team.getId())
+                .title("매칭 모집합니다 222")
+                .startTime(LocalDateTime.of(2025,5,27,12, 0))
+                .endTime(LocalDateTime.of(2025,5,27,14, 0))
+                .region("인천")
+                .matchStatus(MatchStatus.OPEN)
+                .build();
+        MatchPost post3 = MatchPost.builder()
+                .hostTeamId(team.getId())
+                .title("매칭 모집합니다 333")
+                .startTime(LocalDateTime.of(2025,5,27,14, 0))
+                .endTime(LocalDateTime.of(2025,5,27,16, 0))
+                .region("인천")
+                .matchStatus(MatchStatus.OPEN)
+                .build();
+        MatchPost post4 = MatchPost.builder()
+                .hostTeamId(team.getId())
+                .title("매칭 모집합니다 444")
+                .startTime(LocalDateTime.of(2025,5,27,16, 0))
+                .endTime(LocalDateTime.of(2025,5,27,18, 0))
+                .region("인천")
+                .matchStatus(MatchStatus.MATCHED)
+                .build();
+
+        MatchPost post5 = MatchPost.builder()
+                .hostTeamId(team2.getId())
+                .title("매칭 모집합니다 111")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
+                .region("서울")
+                .matchStatus(MatchStatus.OPEN)
+                .build();
+        MatchPost post6 = MatchPost.builder()
+                .hostTeamId(team2.getId())
+                .title("매칭 모집합니다 222")
+                .startTime(LocalDateTime.of(2025,5,27,12, 0))
+                .endTime(LocalDateTime.of(2025,5,27,14, 0))
+                .region("인천")
+                .matchStatus(MatchStatus.OPEN)
+                .build();
+        MatchPost post7 = MatchPost.builder()
+                .hostTeamId(team2.getId())
+                .title("매칭 모집합니다 333")
+                .startTime(LocalDateTime.of(2025,5,27,14, 0))
+                .endTime(LocalDateTime.of(2025,5,27,16, 0))
+                .region("인천")
+                .matchStatus(MatchStatus.MATCHED)
+                .build();
+
+        matchPostRepository.save(post1);
+        matchPostRepository.save(post2);
+        matchPostRepository.save(post3);
+        matchPostRepository.save(post4);
+        matchPostRepository.save(post5);
+        matchPostRepository.save(post6);
+        matchPostRepository.save(post7);
+
+        MatchPostByTeamSearchCondition condition1 = MatchPostByTeamSearchCondition.builder()
+                .keyword("")
+                .matchDate(LocalDate.of(2025,5,27))
+                .region("")
+                .status(MatchPostByTeamStatusVisible.OPEN)
+                .build();
+
+        MatchPostByTeamSearchCondition condition2 = MatchPostByTeamSearchCondition.builder()
+                .keyword("2")
+                .matchDate(LocalDate.of(2025,5,27))
+                .region("")
+                .status(MatchPostByTeamStatusVisible.OPEN)
+                .build();
+
+        MatchPostByTeamSearchCondition condition3 = MatchPostByTeamSearchCondition.builder()
+//                .keyword("2")
+//                .matchDate(LocalDate.now())
+//                .region("")
+                .status(MatchPostByTeamStatusVisible.MATCHED)
+                .build();
+
+        MatchPostByTeamSearchCondition condition4 = MatchPostByTeamSearchCondition.builder()
+//                .keyword("2")
+                .matchDate(LocalDate.of(2025,5,27))
+                .region("인천")
+//                .status(MatchPostStatusVisible.OPEN)
+                .build();
+
+        List<MatchPostSearchResponse> result1 = matchPostService.searchMatchPostByTeam(team.getId(), condition1);
+        List<MatchPostSearchResponse> result2 = matchPostService.searchMatchPostByTeam(team.getId(), condition2);
+        List<MatchPostSearchResponse> result3 = matchPostService.searchMatchPostByTeam(team.getId(), condition3);
+        List<MatchPostSearchResponse> result4 = matchPostService.searchMatchPostByTeam(team.getId(), condition4);
+        List<MatchPostSearchResponse> result5 = matchPostService.searchMatchPostByTeam(team2.getId(), condition1);
+        List<MatchPostSearchResponse> result6 = matchPostService.searchMatchPostByTeam(team2.getId(), condition2);
+        List<MatchPostSearchResponse> result7 = matchPostService.searchMatchPostByTeam(team2.getId(), condition3);
+        assertThat(result1.size()).isEqualTo(3);
+        assertThat(result2.size()).isEqualTo(1);
+        assertThat(result3.size()).isEqualTo(1);
+        assertThat(result4.size()).isEqualTo(3);
+        assertThat(result5.size()).isEqualTo(2);
+        assertThat(result6.size()).isEqualTo(1);
+        assertThat(result7.size()).isEqualTo(1);
+    }
+
+    @Test
+    void 매칭글_상세_조회_상대X(){
+        MatchPostRequest request = MatchPostRequest.builder()
+                .hostTeamId(team.getId())
+                .title("매칭글 테스트 제목")
+                .content("매칭글 테스트 내용")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
+                .region("인천광역시")
+                .city("미추홀구")
+                .roadName("용오로")
+                .buildingNumber("82")
+                .detailAddress("동아아파트 4동 608호")
+                .build();
+
+        matchPostService.createMatchPost(leader.getId(), request);
+
+        MatchPost matchPost = matchPostRepository.findAll().get(0);
+
+        MatchPostResponse matchPostDetail = matchPostService.getMatchPostDetail(matchPost.getId());
+        System.out.println(matchPostDetail);
     }
 
 }

@@ -11,5 +11,5 @@ public enum NotificationType {
     LEFT,        // 탈퇴
     KICK,        // 방출
     DISBAND,      // 해체
-
+//    MATCHAPPROVE,   // 매치 수락
 }

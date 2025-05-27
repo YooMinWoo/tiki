@@ -8,12 +8,8 @@ import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.match.domain.entity.MatchPost;
 import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.dto.MatchPostRequest;
-import com.example.tiki.match.dto.MatchPostSearchCondition;
-import com.example.tiki.match.dto.MatchPostSearchResponse;
-import com.example.tiki.match.dto.MatchPostStatusVisible;
 import com.example.tiki.match.repository.MatchPostRepository;
-import com.example.tiki.match.service.MatchService;
-import com.example.tiki.notifircation.domain.Notification;
+import com.example.tiki.match.service.MatchPostService;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.enums.TeamStatus;
@@ -27,9 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,7 +42,7 @@ public class MatchPostUpdateTest {
     private TeamUserRepository teamUserRepository;
 
     @Autowired
-    private MatchService matchService;
+    private MatchPostService matchPostService;
 
     @Autowired
     private MatchPostRepository matchPostRepository;
@@ -104,7 +98,7 @@ public class MatchPostUpdateTest {
                 .detailAddress("동아아파트 4동 608호")
                 .build();
 
-        matchService.createMatchPost(leader.getId(), beforeRequest);
+        matchPostService.createMatchPost(leader.getId(), beforeRequest);
 
         MatchPost matchPost = matchPostRepository.findAll().get(0);
         String beforeAddress = matchPost.getFullAddress();
@@ -126,7 +120,7 @@ public class MatchPostUpdateTest {
                 .detailAddress("동아아파트 4동 608호")
                 .build();
 
-        matchService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest);
+        matchPostService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest);
 
         String afterAddress = matchPost.getFullAddress();
         String afterTitle = matchPost.getTitle();
@@ -156,7 +150,7 @@ public class MatchPostUpdateTest {
                 .detailAddress("동아아파트 4동 608호")
                 .build();
 
-        matchService.createMatchPost(leader.getId(), beforeRequest);
+        matchPostService.createMatchPost(leader.getId(), beforeRequest);
 
         MatchPost matchPost = matchPostRepository.findAll().get(0);
 
@@ -173,12 +167,12 @@ public class MatchPostUpdateTest {
                 .detailAddress("동아아파트 4동 608호")
                 .build();
 
-        assertThrows(NotFoundException.class, () -> matchService.updateMatchPost(leader.getId(), 100L, afterRequest));
+        assertThrows(NotFoundException.class, () -> matchPostService.updateMatchPost(leader.getId(), 100L, afterRequest));
         afterRequest.setHostTeamId(100L);
-        assertThrows(ForbiddenException.class, () -> matchService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest));
+        assertThrows(ForbiddenException.class, () -> matchPostService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest));
         afterRequest.setHostTeamId(team.getId());
         matchPost.changeStatus(MatchStatus.MATCHED);
-        assertThrows(IllegalStateException.class, () -> matchService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest));
+        assertThrows(IllegalStateException.class, () -> matchPostService.updateMatchPost(leader.getId(), matchPost.getId(), afterRequest));
     }
 
 }
