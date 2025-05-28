@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
-public class MatchRequestDecideTest {
+public class MatchPostCancelTest {
 
     @Autowired
     private RecruitmentService recruitmentService;
@@ -143,58 +143,9 @@ public class MatchRequestDecideTest {
         // 매칭 수락
         matchRequestService.decideMatchRequest(leader.getId(), matchRequest.getId(), DecideStatus.ACCEPTED);
 
-        assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.MATCHED);
-        assertThat(matchPost.getApplicantTeamId()).isEqualTo(team2.getId());
+        // 매칭 취소
+        matchPostService.cancelMatch(leader.getId(), matchPost.getId());
 
-        assertThat(matchRequest.getMatchPostId()).isEqualTo(matchPost.getId());
-        assertThat(matchRequest.getApplicantTeamId()).isEqualTo(team2.getId());
-        assertThat(matchRequest.getRequestStatus()).isEqualTo(RequestStatus.ACCEPTED);
-
-        Notification notification = notificationRepository.findByUserId(member.getId()).get(0);
-
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-
-        System.out.println(notification.getMessage());
-    }
-
-    @Test
-    void 매칭_거절_성공(){
-        MatchPost matchPost = MatchPost.builder()
-                .hostTeamId(team.getId())
-                .title("매칭 모집합니다 111")
-                .startTime(LocalDateTime.of(2025,5,27,10, 0))
-                .endTime(LocalDateTime.of(2025,5,27,12, 0))
-                .region("서울")
-                .matchStatus(MatchStatus.OPEN)
-                .build();
-
-        matchPostRepository.save(matchPost);
-
-        // 매칭 신청
-        matchRequestService.applyForMatch(member.getId(), team2.getId(), matchPost.getId());
-
-        // 매칭 조회
-        MatchRequest matchRequest = matchRequestRepository.findAll().get(0);
-
-        // 매칭 거절
-        matchRequestService.decideMatchRequest(leader.getId(), matchRequest.getId(), DecideStatus.REJECTED);
-
-        assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.OPEN);
-        assertThat(matchPost.getApplicantTeamId()).isNull();
-
-        assertThat(matchRequest.getMatchPostId()).isEqualTo(matchPost.getId());
-        assertThat(matchRequest.getApplicantTeamId()).isEqualTo(team2.getId());
-        assertThat(matchRequest.getRequestStatus()).isEqualTo(RequestStatus.REJECTED);
-
-        Notification notification = notificationRepository.findByUserId(member.getId()).get(0);
-
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-
-        System.out.println(notification.getMessage());
     }
 
 }

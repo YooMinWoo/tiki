@@ -9,6 +9,7 @@ import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.domain.enums.RequestStatus;
 import com.example.tiki.match.dto.DecideStatus;
 import com.example.tiki.match.dto.MatchPostRequest;
+import com.example.tiki.match.dto.MatchRequestResponse;
 import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.match.repository.MatchRequestRepository;
 import com.example.tiki.match.service.MatchPostService;
@@ -32,13 +33,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import static com.example.tiki.match.domain.entity.QMatchRequest.matchRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
-public class MatchRequestDecideTest {
+public class MatchRequestSearchTest {
 
     @Autowired
     private RecruitmentService recruitmentService;
@@ -122,7 +125,7 @@ public class MatchRequestDecideTest {
     }
 
     @Test
-    void 매칭_수락_성공(){
+    void 매칭_조회_성공(){
         MatchPost matchPost = MatchPost.builder()
                 .hostTeamId(team.getId())
                 .title("매칭 모집합니다 111")
@@ -132,38 +135,18 @@ public class MatchRequestDecideTest {
                 .matchStatus(MatchStatus.OPEN)
                 .build();
 
-        matchPostRepository.save(matchPost);
-
-        // 매칭 신청
-        matchRequestService.applyForMatch(member.getId(), team2.getId(), matchPost.getId());
-
-        // 매칭 조회
-        MatchRequest matchRequest = matchRequestRepository.findAll().get(0);
-
-        // 매칭 수락
-        matchRequestService.decideMatchRequest(leader.getId(), matchRequest.getId(), DecideStatus.ACCEPTED);
-
-        assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.MATCHED);
-        assertThat(matchPost.getApplicantTeamId()).isEqualTo(team2.getId());
-
-        assertThat(matchRequest.getMatchPostId()).isEqualTo(matchPost.getId());
-        assertThat(matchRequest.getApplicantTeamId()).isEqualTo(team2.getId());
-        assertThat(matchRequest.getRequestStatus()).isEqualTo(RequestStatus.ACCEPTED);
-
-        Notification notification = notificationRepository.findByUserId(member.getId()).get(0);
-
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-
-        System.out.println(notification.getMessage());
-    }
-
-    @Test
-    void 매칭_거절_성공(){
-        MatchPost matchPost = MatchPost.builder()
+        MatchPost matchPost2 = MatchPost.builder()
                 .hostTeamId(team.getId())
-                .title("매칭 모집합니다 111")
+                .title("매칭 모집합니다 222")
+                .startTime(LocalDateTime.of(2025,5,27,10, 0))
+                .endTime(LocalDateTime.of(2025,5,27,12, 0))
+                .region("서울")
+                .matchStatus(MatchStatus.OPEN)
+                .build();
+
+        MatchPost matchPost3 = MatchPost.builder()
+                .hostTeamId(team.getId())
+                .title("매칭 모집합니다 333")
                 .startTime(LocalDateTime.of(2025,5,27,10, 0))
                 .endTime(LocalDateTime.of(2025,5,27,12, 0))
                 .region("서울")
@@ -171,30 +154,38 @@ public class MatchRequestDecideTest {
                 .build();
 
         matchPostRepository.save(matchPost);
+        matchPostRepository.save(matchPost2);
+        matchPostRepository.save(matchPost3);
 
-        // 매칭 신청
-        matchRequestService.applyForMatch(member.getId(), team2.getId(), matchPost.getId());
+        MatchRequest request1 = MatchRequest.builder()
+                .applicantTeamId(team2.getId())
+                .matchPostId(matchPost.getId())
+                .requestStatus(RequestStatus.PENDING)
+                .build();
 
-        // 매칭 조회
-        MatchRequest matchRequest = matchRequestRepository.findAll().get(0);
+        MatchRequest request2 = MatchRequest.builder()
+                .applicantTeamId(team2.getId())
+                .matchPostId(matchPost2.getId())
+                .requestStatus(RequestStatus.ACCEPTED)
+                .build();
 
-        // 매칭 거절
-        matchRequestService.decideMatchRequest(leader.getId(), matchRequest.getId(), DecideStatus.REJECTED);
+        MatchRequest request3 = MatchRequest.builder()
+                .applicantTeamId(team2.getId())
+                .matchPostId(matchPost3.getId())
+                .requestStatus(RequestStatus.REJECTED)
+                .build();
 
-        assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.OPEN);
-        assertThat(matchPost.getApplicantTeamId()).isNull();
+        matchRequestRepository.save(request1);
+        matchRequestRepository.save(request2);
+        matchRequestRepository.save(request3);
 
-        assertThat(matchRequest.getMatchPostId()).isEqualTo(matchPost.getId());
-        assertThat(matchRequest.getApplicantTeamId()).isEqualTo(team2.getId());
-        assertThat(matchRequest.getRequestStatus()).isEqualTo(RequestStatus.REJECTED);
+        List<MatchRequestResponse> matchRequestList = matchRequestService.getMatchRequestList(team2.getId());
 
-        Notification notification = notificationRepository.findByUserId(member.getId()).get(0);
+        for (MatchRequestResponse response : matchRequestList) {
+            System.out.println(response);
+        }
 
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-
-        System.out.println(notification.getMessage());
+        assertThat(matchRequestList.size()).isEqualTo(3);
     }
 
 }

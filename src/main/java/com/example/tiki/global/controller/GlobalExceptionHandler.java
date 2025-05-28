@@ -4,8 +4,11 @@ import com.example.tiki.global.dto.ApiResponse;
 import com.example.tiki.global.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.AlreadyBuiltException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.nio.channels.AlreadyBoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -16,7 +19,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value()).body(ApiResponse.fail(e.getMessage()));
     }
 
-    @ExceptionHandler({EmailAlreadyExistsException.class, IllegalStateException.class})
+    @ExceptionHandler({EmailAlreadyExistsException.class, IllegalStateException.class, AlreadyBuiltException.class})
     public ResponseEntity<?> _409Exception(RuntimeException e){
         return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(ApiResponse.fail(e.getMessage()));
     }

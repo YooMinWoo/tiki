@@ -30,8 +30,8 @@ public class MatchPost extends BaseEntity {
     private String title;
     private String content;
 
-    private LocalDateTime startTime;  // 경기 시작 시각 (예: 08:00)
-    private LocalDateTime endTime;    // 경기 종료 시각 (예: 10:00)
+    private LocalDateTime startTime;  // 경기 시작 시간
+    private LocalDateTime endTime;    // 경기 종료 시간
 
     @Enumerated(EnumType.STRING)
     private MatchStatus matchStatus;

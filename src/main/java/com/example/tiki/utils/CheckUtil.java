@@ -77,4 +77,11 @@ public class CheckUtil {
         if(matchRequest.getRequestStatus() != RequestStatus.PENDING) throw new IllegalArgumentException("현재 대기중인 상태의 매칭 신청이 아닙니다.");
         return matchRequest;
     }
+
+    public MatchRequest getAcceptedMatchRequest(Long matchRequestId) {
+        MatchRequest matchRequest = matchRequestRepository.findById(matchRequestId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 매칭 신청입니다."));
+        if(matchRequest.getRequestStatus() != RequestStatus.ACCEPTED) throw new IllegalArgumentException("현재 대기중인 상태의 매칭 신청이 아닙니다.");
+        return matchRequest;
+    }
 }

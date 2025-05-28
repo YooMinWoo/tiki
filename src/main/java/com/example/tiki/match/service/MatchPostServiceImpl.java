@@ -5,8 +5,11 @@ import com.example.tiki.api.kakao.KakaoMapService;
 import com.example.tiki.follow.domain.Follow;
 import com.example.tiki.follow.repository.FollowRepository;
 import com.example.tiki.global.exception.ForbiddenException;
+import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.match.domain.entity.MatchPost;
+import com.example.tiki.match.domain.entity.MatchRequest;
 import com.example.tiki.match.domain.enums.MatchStatus;
+import com.example.tiki.match.domain.enums.RequestStatus;
 import com.example.tiki.match.dto.*;
 import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.match.repository.MatchRequestRepository;
@@ -14,7 +17,10 @@ import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.team.domain.entity.Team;
+import com.example.tiki.team.domain.entity.TeamUser;
 import com.example.tiki.team.domain.enums.TeamStatus;
+import com.example.tiki.team.domain.enums.TeamUserRole;
+import com.example.tiki.team.repository.TeamUserRepository;
 import com.example.tiki.utils.CheckUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +39,7 @@ public class MatchPostServiceImpl implements MatchPostService {
     private final MatchRequestRepository matchRequestRepository;
     private final NotificationRepository notificationRepository;
     private final FollowRepository followRepository;
+    private final TeamUserRepository teamUserRepository;
 
     // 매칭글 생성
     @Override
@@ -73,6 +80,64 @@ public class MatchPostServiceImpl implements MatchPostService {
                     .targetId(matchPost.getId())
                     .build());
         }
+    }
+
+    // 매칭 취소 (매칭글에서 취소로 변환 -> request 또한 취소로 변환)
+    @Transactional
+    public void cancelMatch(Long userId, Long matchPostId) {
+        // 모집자가 취소하는 경우, 신청자가 취소하는 경우
+
+        // 매칭 글 조회하기
+        MatchPost matchPost = checkUtil.validateAndGetMatchPost(matchPostId);
+
+        // 매칭 글의 상태가 MATCHED인지 확인
+        if(matchPost.getMatchStatus() != MatchStatus.MATCHED) throw new IllegalStateException("매칭이 성사된 상태가 아닙니다.");
+
+        // 매칭 성사된 request 조회
+        MatchRequest matchRequest = matchRequestRepository.findByMatchPostIdAndRequestStatus(matchPost.getId(), RequestStatus.ACCEPTED)
+                        .orElseThrow(() -> new NotFoundException("에러가 발생하였습니다."));
+
+        // 매칭 글 올린 팀
+        Team hostTeam = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+
+        // 매칭 신청한 팀
+        Team applicantTeam = checkUtil.validateAndGetTeam(matchPost.getApplicantTeamId());
+
+        TeamUser hostTeamLeader = teamUserRepository.findByTeamIdAndTeamUserRole(hostTeam.getId(), TeamUserRole.ROLE_LEADER);
+        TeamUser applicantTeamLeader = teamUserRepository.findByTeamIdAndTeamUserRole(applicantTeam.getId(), TeamUserRole.ROLE_LEADER);
+
+        // 취소자가 매칭 글 올린 팀인 경우
+        boolean isHost = hostTeamLeader.getUserId().equals(userId);
+
+        // 취소자가 매칭 신청한 팀인 경우
+        boolean isApplicant = applicantTeamLeader.getUserId().equals(userId);
+
+        if(!isHost && !isApplicant) throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
+
+        // 글 상태 변경 / 요청 상태 변경
+        matchRequest.changeStatus(RequestStatus.CANCELED);
+        matchPost.changeStatus(MatchStatus.CANCELED);
+
+        Long receiverUserId;
+        String message;
+
+        if (isHost) {
+            receiverUserId = applicantTeamLeader.getUserId();
+            message = hostTeam.getTeamName() + "에서 매칭을 취소했습니다.";
+        } else {
+            receiverUserId = hostTeamLeader.getUserId();
+            message = applicantTeam.getTeamName() + "에서 매칭을 취소했습니다.";
+        }
+
+        Notification notification = Notification.builder()
+                .userId(receiverUserId)
+                .notificationType(NotificationType.MATCHPOST)
+                .targetId(matchPostId)
+                .message(message)
+                .build();
+
+        notificationRepository.save(notification);
+
     }
 
     // 매칭글 조회
@@ -158,6 +223,7 @@ public class MatchPostServiceImpl implements MatchPostService {
         return result;
     }
 
+    // 매칭글 상세페이지 조회
     @Override
     public MatchPostResponse getMatchPostDetail(Long matchPostId) {
         // 존재하는 매칭글인지 확인

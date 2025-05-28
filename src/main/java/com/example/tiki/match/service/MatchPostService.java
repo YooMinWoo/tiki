@@ -24,4 +24,7 @@ public interface MatchPostService {
 
     // 매칭글 상세 조회
     MatchPostResponse getMatchPostDetail(Long matchPostId);
+
+    // 매칭 취소
+    void cancelMatch(Long userId, Long matchPostId);
 }
