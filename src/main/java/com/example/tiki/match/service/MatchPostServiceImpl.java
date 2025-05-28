@@ -2,6 +2,8 @@ package com.example.tiki.match.service;
 
 import com.example.tiki.api.kakao.GeoCoordinate;
 import com.example.tiki.api.kakao.KakaoMapService;
+import com.example.tiki.auth.domain.Role;
+import com.example.tiki.auth.domain.User;
 import com.example.tiki.follow.domain.Follow;
 import com.example.tiki.follow.repository.FollowRepository;
 import com.example.tiki.global.exception.ForbiddenException;
@@ -195,18 +197,57 @@ public class MatchPostServiceImpl implements MatchPostService {
     // 매칭글 삭제
     @Override
     @Transactional
-    public void deleteMatchPost(Long userId, Long matchPostId) {
+    public void deleteMatchPost(User user, Long matchPostId) {
         // 존재하는 매칭글인지 확인
         MatchPost matchPost = checkUtil.validateAndGetMatchPost(matchPostId);
 
         // 팀 entity 가져오기
         Team team = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
 
-        // 수행하려는 주체의 권한이 리더인지 확인
-        checkUtil.validateLeaderAuthority(userId, team.getId());
+        boolean isAdmin = user.getRole() == Role.ROLE_ADMIN;
 
-        // 매칭 성사 완료 상태인지 확인 (MATCHED일 경우 삭제 불가능)
-        if(matchPost.getMatchStatus() != MatchStatus.OPEN) throw new IllegalStateException("삭제가 불가능합니다.");
+        // 수행하려는 주체의 권한이 리더인지 확인
+        if(!isAdmin) checkUtil.validateLeaderAuthority(user.getId(), team.getId());
+
+        // 관리자의 경우 삭제 및 알림 발송
+        if(isAdmin){
+            // 신청자의 경우 신청 상태도 변경한다.
+            Long hostTeamId = matchPost.getHostTeamId();
+            Long applicantTeamId = matchPost.getApplicantTeamId();
+
+            Team hostTeam = checkUtil.validateAndGetTeam(hostTeamId);
+            Team applicantTeam = checkUtil.validateAndGetTeam(applicantTeamId);
+
+            MatchRequest matchRequest = matchRequestRepository.findByMatchPostIdAndApplicantTeamId(matchPostId, applicantTeamId)
+                    .orElseThrow(() -> new IllegalArgumentException("삭제 도중 에러가 발생했습니다."));
+
+            matchRequest.changeStatus(RequestStatus.CANCELED_BY_ADMIN);
+
+            // 매칭 글 올린 팀에게 알림 발송
+            notificationRepository.save(
+                    Notification.builder()
+                            .userId(hostTeamId)
+                            .message("관리자에 의해 글이 삭제 및 매칭이 취소되었습니다.")
+                            .notificationType(NotificationType.NOTHING)
+                            .targetId(null)
+                            .build()
+            );
+
+            // 매칭 신청한 팀에게 알림 발송
+            notificationRepository.save(
+                    Notification.builder()
+                            .userId(applicantTeamId)
+                            .message("관리자에 의해 글이 삭제 및 매칭이 취소되었습니다.")
+                            .notificationType(NotificationType.NOTHING)
+                            .targetId(null)
+                            .build()
+            );
+
+            matchPost.changeStatus(MatchStatus.DELETED_BY_ADMIN);
+            return;
+
+            // 매칭 성사 완료 상태인지 확인 (MATCHED일 경우 삭제 불가능)
+        } else if(matchPost.getMatchStatus() != MatchStatus.OPEN) throw new IllegalStateException("삭제가 불가능합니다.");
 
         matchPost.changeStatus(MatchStatus.DELETED);
     }

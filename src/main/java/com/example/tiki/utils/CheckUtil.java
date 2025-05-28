@@ -53,7 +53,8 @@ public class CheckUtil {
     public MatchPost validateAndGetMatchPost(Long matchPostId){
         MatchPost matchPost = matchPostRepository.findById(matchPostId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
-        if(matchPost.getMatchStatus() == MatchStatus.DELETED) throw new NotFoundException("존재하지 않는 게시글입니다.");
+        if(matchPost.getMatchStatus() == MatchStatus.DELETED
+                || matchPost.getMatchStatus() == MatchStatus.DELETED_BY_ADMIN) throw new NotFoundException("존재하지 않는 게시글입니다.");
         return matchPost;
     }
 
@@ -70,6 +71,8 @@ public class CheckUtil {
                 .orElseThrow(() -> new ForbiddenException("해당 상태의 유저를 찾을 수 없습니다."));
         return teamUser;
     }
+
+    // 특정 팀의
 
     public MatchRequest getPendingMatchRequest(Long matchRequestId) {
         MatchRequest matchRequest = matchRequestRepository.findById(matchRequestId)

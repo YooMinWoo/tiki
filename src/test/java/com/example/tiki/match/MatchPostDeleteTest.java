@@ -130,12 +130,12 @@ public class MatchPostDeleteTest {
         matchPostRepository.save(post4);
         matchPostRepository.save(post5);
 
-        matchPostService.deleteMatchPost(leader.getId(), post1.getId());
-        assertThrows(IllegalStateException.class, () -> matchPostService.deleteMatchPost(leader.getId(), post2.getId()));
-        assertThrows(IllegalStateException.class, () -> matchPostService.deleteMatchPost(leader.getId(), post3.getId()));
-        assertThrows(IllegalStateException.class, () -> matchPostService.deleteMatchPost(leader.getId(), post4.getId()));
-        assertThrows(NotFoundException.class, () -> matchPostService.deleteMatchPost(leader.getId(), 100L));
-        assertThrows(ForbiddenException.class, () -> matchPostService.deleteMatchPost(member.getId(), post5.getId()));
+        matchPostService.deleteMatchPost(leader, post1.getId());
+        assertThrows(IllegalStateException.class, () -> matchPostService.deleteMatchPost(leader, post2.getId()));
+        assertThrows(IllegalStateException.class, () -> matchPostService.deleteMatchPost(leader, post3.getId()));
+        assertThrows(IllegalStateException.class, () -> matchPostService.deleteMatchPost(leader, post4.getId()));
+        assertThrows(NotFoundException.class, () -> matchPostService.deleteMatchPost(leader, 100L));
+        assertThrows(ForbiddenException.class, () -> matchPostService.deleteMatchPost(member, post5.getId()));
         assertThat(post1.getMatchStatus()).isEqualTo(MatchStatus.DELETED);
     }
 }

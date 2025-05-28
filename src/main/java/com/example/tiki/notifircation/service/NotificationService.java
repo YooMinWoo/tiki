@@ -61,7 +61,7 @@ public class NotificationService {
             case APPROVE, REJECT, KICK -> "/api/teams/" + targetId;
             case JOIN -> "/api/teams/"+targetId+"/join-request/waiting";
             case DISBAND -> "/api/users/teams";
-//            case MATCHAPPROVE -> "/api/match-post/"+targetId;
+            case NOTHING -> null;
         };
     }
 }

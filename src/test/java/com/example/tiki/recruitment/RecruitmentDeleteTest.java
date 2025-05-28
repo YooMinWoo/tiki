@@ -114,7 +114,7 @@ public class RecruitmentDeleteTest {
                 .closedAt(null)
                 .build());
 
-        recruitmentService.deleteRecruitmentPost(leader.getId(), recruitment.getId());
+        recruitmentService.deleteRecruitmentPost(leader, recruitment.getId());
 
         for (Recruitment rec : recruitmentRepository.findAll()) {
             assertThat(rec.getTitle()).isEqualTo(recruitment.getTitle());
@@ -137,7 +137,7 @@ public class RecruitmentDeleteTest {
                 .build());
 
         NotFoundException ex = assertThrows(NotFoundException.class,
-                () -> recruitmentService.deleteRecruitmentPost(leader.getId(), 100L));
+                () -> recruitmentService.deleteRecruitmentPost(leader, 100L));
 
         assertThat(ex.getMessage()).isEqualTo("존재하지 않는 게시글입니다.");
 
@@ -155,7 +155,7 @@ public class RecruitmentDeleteTest {
                 .build());
 
         NotFoundException ex = assertThrows(NotFoundException.class,
-                () -> recruitmentService.deleteRecruitmentPost(leader.getId(), recruitment.getId()));
+                () -> recruitmentService.deleteRecruitmentPost(leader, recruitment.getId()));
 
         assertThat(ex.getMessage()).isEqualTo("존재하지 않는 게시글입니다.");
 
@@ -173,7 +173,7 @@ public class RecruitmentDeleteTest {
                 .build());
 
         ForbiddenException forbiddenException = assertThrows(ForbiddenException.class,
-                () -> recruitmentService.deleteRecruitmentPost(member.getId(), recruitment.getId()));
+                () -> recruitmentService.deleteRecruitmentPost(member, recruitment.getId()));
         assertThat(forbiddenException.getMessage()).isEqualTo("해당 작업을 수행할 권한이 없습니다.");
 
     }

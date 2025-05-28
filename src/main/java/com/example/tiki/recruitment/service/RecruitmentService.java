@@ -1,5 +1,6 @@
 package com.example.tiki.recruitment.service;
 
+import com.example.tiki.auth.domain.User;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.dto.RecruitmentCreateRequest;
 import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
@@ -19,7 +20,7 @@ public interface RecruitmentService {
     void closeRecruitmentPost(Long userId, Long recruitmentId);
 
     // 모집글 삭제
-    void deleteRecruitmentPost(Long userId, Long recruitmentId);
+    void deleteRecruitmentPost(User user, Long recruitmentId);
 
     // 모집글 리오픈
     void reopenRecruitmentPost(Long userId, Long recruitmentId);

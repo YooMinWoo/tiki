@@ -68,4 +68,8 @@ public class Recruitment extends BaseEntity {
         this.recruitmentStatus = RecruitmentStatus.DELETED;
     }
 
+    public void deletedByAdmin(){
+        this.recruitmentStatus = RecruitmentStatus.DELETED_BY_ADMIN;
+    }
+
 }

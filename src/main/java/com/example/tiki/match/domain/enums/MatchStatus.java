@@ -7,4 +7,5 @@ public enum MatchStatus {
     COMPLETED,  // 매칭된 경기가 실제로 완료된 경우
     CANCELED,  // 매칭 성사 이후, 한 쪽의 취소로 무산된 게시글
     DELETED,    // 글을 삭제함
+    DELETED_BY_ADMIN,    // 관리자에 의해 글이 삭제됨
 }

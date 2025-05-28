@@ -1,6 +1,7 @@
 package com.example.tiki.match.service;
 
 
+import com.example.tiki.auth.domain.User;
 import com.example.tiki.match.dto.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface MatchPostService {
     void updateMatchPost(Long userId, Long matchPostId, MatchPostRequest request);
 
     // 매칭글 삭제
-    void deleteMatchPost(Long userId, Long matchPostId);
+    void deleteMatchPost(User user, Long matchPostId);
 
     // 팀 별 매칭글 내역 조회
     List<MatchPostSearchResponse> searchMatchPostByTeam(Long teamId, MatchPostByTeamSearchCondition condition);

@@ -4,6 +4,8 @@ import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.repository.AuthRepository;
 import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.global.exception.TeamApplicationException;
+import com.example.tiki.match.domain.entity.MatchPost;
+import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.notifircation.domain.Notification;
 import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
@@ -42,6 +44,7 @@ public class TeamServiceImpl implements TeamService {
     private final NotificationRepository notificationRepository;
     private final CheckUtil checkUtil;
     private final RecruitmentRepository recruitmentRepository;
+    private final MatchPostRepository matchPostRepository;
 
     // 팀 해체
     @Transactional
@@ -95,7 +98,9 @@ public class TeamServiceImpl implements TeamService {
             if(recruitment.getRecruitmentStatus() == RecruitmentStatus.OPEN) recruitment.closed();
         }
 
-        // 3. 매칭이 잡혔을 경우 어떻게 하지?
+        // 3. 매칭이 잡혔을 경우
+        List<MatchPost> matchPosts = matchPostRepository.searchMatched(teamId);
+        if(!matchPosts.isEmpty()) throw new IllegalStateException("매칭이 성사가 된 매칭이 있습니다. 취소한 뒤 비활성화를 진행하여 주세요.");
     }
 
     // 팀 활성화

@@ -2,6 +2,7 @@ package com.example.tiki.match.repository;
 
 import com.example.tiki.match.domain.entity.MatchPost;
 import com.example.tiki.match.domain.entity.QMatchPost;
+import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.dto.MatchPostByTeamSearchCondition;
 import com.example.tiki.match.dto.MatchPostSearchCondition;
 import com.querydsl.core.BooleanBuilder;
@@ -100,6 +101,18 @@ public class MatchPostRepositoryCustomImpl implements MatchPostRepositoryCustom{
                 .selectFrom(matchPost)
                 .where(builder)
                 .orderBy(matchPost.startTime.asc())  // startTime 이른 순 정렬
+                .fetch();
+    }
+
+    // 특정 팀이 MATCHED인 상태의 매칭 글이 있는지 확인
+    @Override
+    public List<MatchPost> searchMatched(Long teamId) {
+        QMatchPost matchPost = QMatchPost.matchPost;
+        return queryFactory.selectFrom(matchPost)
+                .where(
+                        matchPost.matchStatus.eq(MatchStatus.MATCHED),
+                        matchPost.applicantTeamId.eq(teamId).or(matchPost.hostTeamId.eq(teamId))
+                )
                 .fetch();
     }
 }
