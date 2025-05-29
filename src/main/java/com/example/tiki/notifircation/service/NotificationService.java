@@ -55,13 +55,16 @@ public class NotificationService {
 
         return switch (type) {
             case MATCHPOST -> "/api/matches/" + targetId;
+            case MATCHPOSTLIST -> "/api/match-posts/search";
             case MATCHREQUEST -> "/api/matches/" + targetId;
             case RECRUIT -> "/api/recruits/" + targetId;
             case FOLLOW, LEFT -> "/api/users/" + targetId;
             case APPROVE, REJECT, KICK -> "/api/teams/" + targetId;
             case JOIN -> "/api/teams/"+targetId+"/join-request/waiting";
             case DISBAND -> "/api/users/teams";
-            case NOTHING -> null;
+            case SCHEDULE -> "/api/match-posts/schedule/" + targetId;
+            case RECRUITLIST -> "/api/recruitments/search";
+            case TEAMPAGE -> "/api/";
         };
     }
 }

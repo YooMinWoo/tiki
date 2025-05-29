@@ -118,6 +118,44 @@ public class TeamServiceImpl implements TeamService {
 
     }
 
+    // 리더 변경
+    @Override
+    @Transactional
+    public void changeLeader(Long beforeLeaderId, Long afterLeaderId, Long teamId) {
+        // 존재하는 팀인지
+        Team team = checkUtil.validateAndGetTeam(teamId);
+
+        // 리더인지 확인
+        TeamUser beforeLeader = checkUtil.validateLeaderAuthority(beforeLeaderId, teamId);
+
+        // 회원인지 확인
+        TeamUser afterLeader = teamUserRepository.findByUserIdAndTeamIdAndTeamUserStatus(afterLeaderId, teamId, TeamUserStatus.APPROVED)
+                .orElseThrow(() -> new NotFoundException("팀원이 아닌 회원에게 리더를 임명할 수 없습니다."));
+
+        // 이전 리더 ROLE
+        TeamUserRole previousBeforeLeaderRole = beforeLeader.getTeamUserRole();
+        TeamUserRole previousAfterLeaderRole = afterLeader.getTeamUserRole();
+
+        // 리더 상태 변경
+        beforeLeader.changeRole(TeamUserRole.ROLE_MEMBER);
+        afterLeader.changeRole(TeamUserRole.ROLE_LEADER);
+
+        // 거절 되었다고 알림 발송
+        notificationRepository.save(
+                Notification.builder()
+                        .userId(afterLeader.getUserId())
+                        .message(team.getTeamName()+"의 리더가 되었습니다.")
+                        .notificationType(NotificationType.TEAMPAGE)
+                        .targetId(teamId)
+                        .build()
+        );
+
+        // 전 리더 히스토리 저장
+        saveHistory(beforeLeader, previousBeforeLeaderRole, beforeLeader.getTeamUserStatus());
+        // 현 리더 히스토리 저장
+        saveHistory(afterLeader, previousAfterLeaderRole, afterLeader.getTeamUserStatus());
+    }
+
     // 내 승인 대기 조회
     public List<MyWaiting> getMyWaiting(Long userId) {
         List<MyWaiting> myWaitings = new ArrayList<>();
@@ -147,6 +185,19 @@ public class TeamServiceImpl implements TeamService {
         }
 
         return myTeams;
+    }
+
+    // 팀 상세 조회
+    public TeamInfo getTeamInfo(Long teamId){
+        // 팀 존재 확인
+        Team team = checkUtil.validateAndGetTeam(teamId);
+
+        int memberCount = teamUserRepository.findByTeamIdAndTeamUserStatusIn(teamId, List.of(TeamUserStatus.APPROVED)).size();
+        TeamUser teamUser = teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER);
+        User leader = authRepository.findById(teamUser.getUserId())
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 유저입니다. (에러 발생)"));
+
+        return TeamInfo.from(team,memberCount,leader);
     }
 
     // 팀 조회

@@ -49,4 +49,9 @@ public interface TeamService {
     // 팀 활성화
     void activeTeam(Long userId, Long teamId);
 
+    // 리더 변경
+    void changeLeader(Long beforeLeaderId, Long afterLeaderId, Long teamId);
+
+    // 팀 상세 조회
+    TeamInfo getTeamInfo(Long teamId);
 }

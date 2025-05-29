@@ -127,7 +127,7 @@ public class RecruitmentServiceImpl implements RecruitmentService{
                     Notification.builder()
                             .userId(teamUser.getUserId())
                             .message("글이 삭제 되어 신청이 거절 되었습니다.")
-                            .notificationType(NotificationType.NOTHING)
+                            .notificationType(NotificationType.RECRUITLIST)
                             .targetId(null)
                             .build()
             );
@@ -140,7 +140,7 @@ public class RecruitmentServiceImpl implements RecruitmentService{
                     Notification.builder()
                             .userId(leader.getUserId())
                             .message("관리자에 의해 모집 글이 삭제되었습니다.")
-                            .notificationType(NotificationType.NOTHING)
+                            .notificationType(NotificationType.RECRUITLIST)
                             .targetId(null)
                             .build()
             );

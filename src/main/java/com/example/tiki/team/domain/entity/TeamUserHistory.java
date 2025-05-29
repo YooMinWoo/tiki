@@ -14,6 +14,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@ToString
 public class TeamUserHistory extends BaseEntity {
     @Id
     @GeneratedValue

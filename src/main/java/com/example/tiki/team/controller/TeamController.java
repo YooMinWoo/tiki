@@ -185,4 +185,23 @@ public class TeamController {
         List<TeamUserSimpleResponse> getTeamUsers = teamService.getTeamUsers(user.getId(), teamId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 회원 리스트", getTeamUsers));
     }
+
+    /**
+     * 팀 리더 변경
+     */
+    @PostMapping("/{teamId}/change-leader/{afterLeaderId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @Operation(summary = "팀 리더 변경", description = "기존 리더가 팀의 다른 팀원을 새로운 리더로 지정한다.")
+    public ResponseEntity<?> changeTeamLeader(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable("teamId") Long teamId,
+            @PathVariable("afterLeaderId") Long afterLeaderId
+    ) {
+        Long beforeLeaderId = customUserDetails.getUser().getId();
+
+        teamService.changeLeader(beforeLeaderId, afterLeaderId, teamId);
+        return ResponseEntity.ok(ApiResponse.success("팀 리더 변경 성공", null));
+    }
+
+
 }

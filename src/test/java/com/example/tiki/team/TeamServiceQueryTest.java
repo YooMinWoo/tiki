@@ -299,4 +299,45 @@ public class TeamServiceQueryTest {
         }
     }
 
+    @Test
+    void 팀_상세_조회(){
+        // 유저 10명 생성하고
+        // 팀 1개 만들고
+        // 그 팀에 가입 시키고
+        Team dummyTeam = teamRepository.save(Team.builder()
+                .teamName("테스트 팀")
+                .teamDescription("테스트 설명")
+                .teamStatus(TeamStatus.ACTIVE)
+                .build());
+        for(int i = 1; i <= 10; i++){
+            User dummyUser = authRepository.save(
+                        User.builder()
+                                .name("dummy"+i)
+                                .email("dummy"+i+"@naver.com")
+                                .role(Role.ROLE_USER)
+                                .build());
+            if(i == 1){
+                teamUserRepository.save(TeamUser.builder()
+                        .userId(dummyUser.getId())
+                        .teamId(dummyTeam.getId())
+                        .teamUserRole(TeamUserRole.ROLE_LEADER)
+                        .teamUserStatus(TeamUserStatus.APPROVED)
+                        .joinedAt(LocalDateTime.now())
+                        .build());
+            } else {
+                teamUserRepository.save(TeamUser.builder()
+                        .userId(dummyUser.getId())
+                        .teamId(dummyTeam.getId())
+                        .teamUserRole(TeamUserRole.ROLE_MEMBER)
+                        .teamUserStatus(TeamUserStatus.APPROVED)
+                        .joinedAt(LocalDateTime.now())
+                        .build());
+            }
+        }
+        TeamInfo teamInfo = teamService.getTeamInfo(dummyTeam.getId());
+        assertThat(teamInfo.getLeaderName()).isEqualTo("dummy1");
+        assertThat(teamInfo.getMemberCount()).isEqualTo(10);
+        assertThat(teamInfo.getTeamId()).isEqualTo(dummyTeam.getId());
+    }
+
 }

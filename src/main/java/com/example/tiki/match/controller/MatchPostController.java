@@ -124,4 +124,16 @@ public class MatchPostController {
         matchPostService.cancelMatch(user.getId(), matchPostId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("매칭 취소 success!", null));
     }
+
+    /**
+     * 팀의 매칭 일정 조회
+     */
+    @GetMapping("/schedule/{teamId}")
+    @Operation(summary = "팀 매칭 일정 조회", description = "특정 팀의 매칭된 일정들을 조회한다.")
+    public ResponseEntity<?> getMatchedSchedule(
+            @PathVariable Long teamId
+    ) {
+        List<MatchPostMatchedResponse> response = matchPostService.getMatched(teamId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("매칭 일정 조회 성공", response));
+    }
 }

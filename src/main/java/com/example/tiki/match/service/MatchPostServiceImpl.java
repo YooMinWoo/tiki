@@ -215,8 +215,8 @@ public class MatchPostServiceImpl implements MatchPostService {
             Long hostTeamId = matchPost.getHostTeamId();
             Long applicantTeamId = matchPost.getApplicantTeamId();
 
-            Team hostTeam = checkUtil.validateAndGetTeam(hostTeamId);
-            Team applicantTeam = checkUtil.validateAndGetTeam(applicantTeamId);
+            TeamUser hostTeamLeader = teamUserRepository.findByTeamIdAndTeamUserRole(hostTeamId, TeamUserRole.ROLE_LEADER);
+            TeamUser applicantTeamLeader = teamUserRepository.findByTeamIdAndTeamUserRole(applicantTeamId, TeamUserRole.ROLE_LEADER);
 
             MatchRequest matchRequest = matchRequestRepository.findByMatchPostIdAndApplicantTeamId(matchPostId, applicantTeamId)
                     .orElseThrow(() -> new IllegalArgumentException("삭제 도중 에러가 발생했습니다."));
@@ -226,20 +226,20 @@ public class MatchPostServiceImpl implements MatchPostService {
             // 매칭 글 올린 팀에게 알림 발송
             notificationRepository.save(
                     Notification.builder()
-                            .userId(hostTeamId)
+                            .userId(hostTeamLeader.getUserId())
                             .message("관리자에 의해 글이 삭제 및 매칭이 취소되었습니다.")
-                            .notificationType(NotificationType.NOTHING)
-                            .targetId(null)
+                            .notificationType(NotificationType.MATCHPOSTLIST)
+                            .targetId(hostTeamLeader.getTeamId())
                             .build()
             );
 
             // 매칭 신청한 팀에게 알림 발송
             notificationRepository.save(
                     Notification.builder()
-                            .userId(applicantTeamId)
+                            .userId(applicantTeamLeader.getUserId())
                             .message("관리자에 의해 글이 삭제 및 매칭이 취소되었습니다.")
-                            .notificationType(NotificationType.NOTHING)
-                            .targetId(null)
+                            .notificationType(NotificationType.MATCHPOSTLIST)
+                            .targetId(applicantTeamLeader.getTeamId())
                             .build()
             );
 
@@ -280,6 +280,19 @@ public class MatchPostServiceImpl implements MatchPostService {
         }
 
         return MatchPostResponse.create(matchPost, hostTeam, applicantTeam);
+    }
+
+    // 매칭 일정
+    @Override
+    public List<MatchPostMatchedResponse> getMatched(Long teamId){
+        List<MatchPostMatchedResponse> result = new ArrayList<>();
+        List<MatchPost> matchPosts = matchPostRepository.searchMatched(teamId);
+        for (MatchPost matchPost : matchPosts) {
+            Team hostTeam = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+            Team applicantTeam = checkUtil.validateAndGetTeam(matchPost.getApplicantTeamId());
+            result.add(MatchPostMatchedResponse.create(matchPost, hostTeam, applicantTeam));
+        }
+        return result;
     }
 
 

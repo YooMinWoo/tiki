@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class MyTeam {
+
+    // 내 팀들 리스트 보여줄 때 나타나는 dto, 팀 상세 페이지는 TeamInfo를 활용
+
     // 팀 id
     // 팀 이름
     // 내 권한

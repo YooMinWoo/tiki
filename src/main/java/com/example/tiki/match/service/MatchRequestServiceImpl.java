@@ -54,6 +54,9 @@ public class MatchRequestServiceImpl implements MatchRequestService {
         // 리더인지 확인
         checkUtil.validateLeaderAuthority(userId, teamId);
 
+        // 본인 팀의 매칭 글인지 확인
+        if(matchPost.getHostTeamId() == team.getId()) throw new IllegalArgumentException("본인 팀의 매칭글에는 신청할 수 없습니다.");
+
         // 활성화 팀인지 확인
         if(team.getTeamStatus() != TeamStatus.ACTIVE) throw new IllegalStateException("팀 비활성화를 해제하여 주세요.");
 

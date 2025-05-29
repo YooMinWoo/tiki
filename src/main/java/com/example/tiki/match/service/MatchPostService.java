@@ -28,4 +28,7 @@ public interface MatchPostService {
 
     // 매칭 취소
     void cancelMatch(Long userId, Long matchPostId);
+
+    // 매칭 일정
+    List<MatchPostMatchedResponse> getMatched(Long teamId);
 }

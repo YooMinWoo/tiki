@@ -59,10 +59,14 @@ public class CheckUtil {
     }
 
     // 수행하려는 주체의 권한이 리더인지 확인
-    public void validateLeaderAuthority(Long leaderId, Long teamId) {
-        if(leaderId != teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER).getUserId()){
-            throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
-        }
+    public TeamUser validateLeaderAuthority(Long leaderId, Long teamId) {
+        TeamUser teamUser = teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER);
+        if(teamUser == null || teamUser.getUserId() != leaderId) throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
+
+        return teamUser;
+//        if(leaderId != teamUserRepository.findByTeamIdAndTeamUserRole(teamId, TeamUserRole.ROLE_LEADER).getUserId()){
+//            throw new ForbiddenException("해당 작업을 수행할 권한이 없습니다.");
+//        }
     }
 
     // 특정 상태의 유저 확인
