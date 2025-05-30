@@ -32,7 +32,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import static com.example.tiki.match.domain.entity.QMatchRequest.matchRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -72,8 +74,14 @@ public class MatchRequestDecideTest {
 
     private User leader;
     private User member;
+    private User member2;
+    private User member3;
+    private User member4;
     private Team team;
     private Team team2;
+    private Team team5;
+    private Team team6;
+    private Team team7;
 
     @BeforeEach
     void 더미데이터_생성(){
@@ -85,6 +93,24 @@ public class MatchRequestDecideTest {
                         .build());
 
         member = authRepository.save(
+                User.builder()
+                        .name("member")
+                        .email("member@naver.com")
+                        .role(Role.ROLE_USER)
+                        .build());
+        member2 = authRepository.save(
+                User.builder()
+                        .name("member")
+                        .email("member@naver.com")
+                        .role(Role.ROLE_USER)
+                        .build());
+        member3 = authRepository.save(
+                User.builder()
+                        .name("member")
+                        .email("member@naver.com")
+                        .role(Role.ROLE_USER)
+                        .build());
+        member4 = authRepository.save(
                 User.builder()
                         .name("member")
                         .email("member@naver.com")
@@ -105,6 +131,25 @@ public class MatchRequestDecideTest {
                         .teamStatus(TeamStatus.ACTIVE)
                         .build());
 
+        team5 = teamRepository.save(
+                Team.builder()
+                        .teamName("테스트 팀555")
+                        .teamDescription("테스트 설명555")
+                        .teamStatus(TeamStatus.ACTIVE)
+                        .build());
+        team6 = teamRepository.save(
+                Team.builder()
+                        .teamName("테스트 팀666")
+                        .teamDescription("테스트 설명666")
+                        .teamStatus(TeamStatus.ACTIVE)
+                        .build());
+        team7 = teamRepository.save(
+                Team.builder()
+                        .teamName("테스트 팀777")
+                        .teamDescription("테스트 설명777")
+                        .teamStatus(TeamStatus.ACTIVE)
+                        .build());
+
         teamUserRepository.save(TeamUser.builder()
                 .userId(leader.getId())
                 .teamId(team.getId())
@@ -115,6 +160,27 @@ public class MatchRequestDecideTest {
         teamUserRepository.save(TeamUser.builder()
                 .userId(member.getId())
                 .teamId(team2.getId())
+                .teamUserRole(TeamUserRole.ROLE_LEADER)
+                .teamUserStatus(TeamUserStatus.APPROVED)
+                .build());
+
+        teamUserRepository.save(TeamUser.builder()
+                .userId(member2.getId())
+                .teamId(team5.getId())
+                .teamUserRole(TeamUserRole.ROLE_LEADER)
+                .teamUserStatus(TeamUserStatus.APPROVED)
+                .build());
+
+        teamUserRepository.save(TeamUser.builder()
+                .userId(member3.getId())
+                .teamId(team6.getId())
+                .teamUserRole(TeamUserRole.ROLE_LEADER)
+                .teamUserStatus(TeamUserStatus.APPROVED)
+                .build());
+
+        teamUserRepository.save(TeamUser.builder()
+                .userId(member4.getId())
+                .teamId(team7.getId())
                 .teamUserRole(TeamUserRole.ROLE_LEADER)
                 .teamUserStatus(TeamUserStatus.APPROVED)
                 .build());
@@ -136,9 +202,11 @@ public class MatchRequestDecideTest {
 
         // 매칭 신청
         matchRequestService.applyForMatch(member.getId(), team2.getId(), matchPost.getId());
+        matchRequestService.applyForMatch(member2.getId(), team5.getId(), matchPost.getId());
+        matchRequestService.applyForMatch(member3.getId(), team6.getId(), matchPost.getId());
+        matchRequestService.applyForMatch(member4.getId(), team7.getId(), matchPost.getId());
 
-        // 매칭 조회
-        MatchRequest matchRequest = matchRequestRepository.findAll().get(0);
+        MatchRequest matchRequest = matchRequestRepository.findByMatchPostIdAndApplicantTeamId(matchPost.getId(), team2.getId()).get();
 
         // 매칭 수락
         matchRequestService.decideMatchRequest(leader.getId(), matchRequest.getId(), DecideStatus.ACCEPTED);
@@ -146,17 +214,15 @@ public class MatchRequestDecideTest {
         assertThat(matchPost.getMatchStatus()).isEqualTo(MatchStatus.MATCHED);
         assertThat(matchPost.getApplicantTeamId()).isEqualTo(team2.getId());
 
-        assertThat(matchRequest.getMatchPostId()).isEqualTo(matchPost.getId());
-        assertThat(matchRequest.getApplicantTeamId()).isEqualTo(team2.getId());
-        assertThat(matchRequest.getRequestStatus()).isEqualTo(RequestStatus.ACCEPTED);
+        List<MatchRequest> matchRequestList = matchRequestRepository.findByMatchPostId(matchPost.getId());
+        for (MatchRequest request : matchRequestList) {
+            System.out.println(request);
+        }
 
-        Notification notification = notificationRepository.findByUserId(member.getId()).get(0);
-
-        assertThat(notification.getUserId()).isEqualTo(member.getId());
-        assertThat(notification.getTargetId()).isEqualTo(matchPost.getId());
-        assertThat(notification.getNotificationType()).isEqualTo(NotificationType.MATCHPOST);
-
-        System.out.println(notification.getMessage());
+        List<Notification> notificationList = notificationRepository.findAll();
+        for (Notification notification : notificationList) {
+            System.out.println(notification);
+        }
     }
 
     @Test

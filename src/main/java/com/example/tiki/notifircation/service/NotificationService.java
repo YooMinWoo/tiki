@@ -54,9 +54,9 @@ public class NotificationService {
     public String getRedirectUrl(NotificationType type, Long targetId){
 
         return switch (type) {
-            case MATCHPOST -> "/api/matches/" + targetId;
+            case MATCHPOST -> "/api/match-posts/" + targetId;
             case MATCHPOSTLIST -> "/api/match-posts/search";
-            case MATCHREQUEST -> "/api/matches/" + targetId;
+            case MATCHREQUEST -> "/api/match-requests/" + targetId;
             case RECRUIT -> "/api/recruits/" + targetId;
             case FOLLOW, LEFT -> "/api/users/" + targetId;
             case APPROVE, REJECT, KICK -> "/api/teams/" + targetId;

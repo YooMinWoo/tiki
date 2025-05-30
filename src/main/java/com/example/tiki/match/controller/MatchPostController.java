@@ -136,4 +136,17 @@ public class MatchPostController {
         List<MatchPostMatchedResponse> response = matchPostService.getMatched(teamId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("매칭 일정 조회 성공", response));
     }
+
+    /**
+     * 매칭 글에 대한 매칭 신청 리스트
+     */
+    @GetMapping("/{matchPostId}/requests")
+    @Operation(summary = "매칭 글에 대한 매칭 신청 리스트", description = "매칭 글에 대한 매칭 신청 리스트를 조회한다.")
+    public ResponseEntity<?> getMatchRequestsForPost(
+            @PathVariable("matchPostId") Long matchPostId
+    ) {
+        List<MatchRequestsForPost> matchRequests =
+                matchPostService.getMatchRequestsForPost(matchPostId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("매칭 글에 대한 매칭 신청 리스트", matchRequests));
+    }
 }

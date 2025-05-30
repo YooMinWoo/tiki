@@ -92,4 +92,8 @@ public class RecruitmentController {
         List<RecruitmentSearchResultDto> results = recruitmentService.getRecruitmentSearchResult(keyword, status);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("모집글 조회 success!", results));
     }
+
+    // 모집글 상세 조회
+    @GetMapping("/{recruitmentId}")
+
 }

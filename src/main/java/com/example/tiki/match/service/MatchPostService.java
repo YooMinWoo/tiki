@@ -31,4 +31,7 @@ public interface MatchPostService {
 
     // 매칭 일정
     List<MatchPostMatchedResponse> getMatched(Long teamId);
+
+    // 특정 매칭 글에 대한 매칭 요청 리스트
+    List<MatchRequestsForPost> getMatchRequestsForPost(Long matchPostId);
 }

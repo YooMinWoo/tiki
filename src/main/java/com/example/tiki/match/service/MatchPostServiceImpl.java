@@ -295,6 +295,20 @@ public class MatchPostServiceImpl implements MatchPostService {
         return result;
     }
 
+    // 특정 매칭 글에 대한 매칭 요청 리스트
+    @Override
+    public List<MatchRequestsForPost> getMatchRequestsForPost(Long matchPostId) {
+        List<MatchRequestsForPost> result = new ArrayList<>();
+        MatchPost matchPost = checkUtil.validateAndGetMatchPost(matchPostId);
+        List<MatchRequest> matchRequestList = matchRequestRepository.findByMatchPostId(matchPost.getId());
+        for (MatchRequest matchRequest : matchRequestList) {
+            Team applicantTeam = checkUtil.validateAndGetTeam(matchRequest.getApplicantTeamId());
+            result.add(MatchRequestsForPost.from(matchPost, matchRequest, applicantTeam));
+        }
+        return result;
+    }
+
+
 
     private String getFullAddress(MatchPostRequest request){
         String region = request.getRegion();

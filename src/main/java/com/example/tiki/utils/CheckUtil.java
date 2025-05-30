@@ -8,6 +8,9 @@ import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.domain.enums.RequestStatus;
 import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.match.repository.MatchRequestRepository;
+import com.example.tiki.notion.domain.entity.Notion;
+import com.example.tiki.notion.domain.enums.NotionStatus;
+import com.example.tiki.notion.repository.NotionRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
@@ -21,8 +24,6 @@ import com.example.tiki.team.repository.TeamUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class CheckUtil {
@@ -32,6 +33,7 @@ public class CheckUtil {
     private final RecruitmentRepository recruitmentRepository;
     private final MatchPostRepository matchPostRepository;
     private final MatchRequestRepository matchRequestRepository;
+    private final NotionRepository notionRepository;
 
     // 팀이 존재하는지 확인
     public Team validateAndGetTeam(Long teamId) {
@@ -39,6 +41,14 @@ public class CheckUtil {
                 .orElseThrow(() -> new NotFoundException("해당 팀은 존재하지 않습니다."));
         if(team.getTeamStatus() == TeamStatus.DISBANDED) throw new NotFoundException("해당 팀은 존재하지 않습니다.");
         return team;
+    }
+
+    // 공지사항이 존재하는지 확인
+    public Notion validateAndGetNotion(Long notionId) {
+        Notion notion = notionRepository.findById(notionId)
+                .orElseThrow(() -> new NotFoundException("해당 공지사항은 존재하지 않습니다."));
+        if(notion.getNotionStatus() == NotionStatus.DELETED) throw new NotFoundException("해당 공지사항은 존재하지 않습니다.");
+        return notion;
     }
 
     // 모집글이 존재하는지 확인

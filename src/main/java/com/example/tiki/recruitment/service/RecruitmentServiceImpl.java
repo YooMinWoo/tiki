@@ -9,10 +9,7 @@ import com.example.tiki.notifircation.domain.NotificationType;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
-import com.example.tiki.recruitment.dto.RecruitmentCreateRequest;
-import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
-import com.example.tiki.recruitment.dto.RecruitmentStatusVisible;
-import com.example.tiki.recruitment.dto.RecruitmentUpdateRequest;
+import com.example.tiki.recruitment.dto.*;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
 import com.example.tiki.team.domain.entity.Team;
 import com.example.tiki.team.domain.entity.TeamUser;
@@ -179,6 +176,14 @@ public class RecruitmentServiceImpl implements RecruitmentService{
         }
         return resultDtoList;
 
+    }
+
+    // 모집글 상세 조회
+    @Override
+    public RecruitmentDetailDto getRecruitmentDetail(Long recruitmentId) {
+        Recruitment recruitment = checkUtil.validateAndGetRecruitment(recruitmentId);
+        Team team = checkUtil.validateAndGetTeam(recruitment.getTeamId());
+        return RecruitmentDetailDto.from(recruitment, team);
     }
 
 }

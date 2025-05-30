@@ -59,10 +59,10 @@ public class MatchRequestController {
     /**
      * 특정 팀의 매칭 요청 내역 조회
      */
-    @GetMapping
-    @Operation(summary = "매칭 요청 내역 조회", description = "특정 팀의 매칭 요청 내역을 조회한다.")
+    @GetMapping("/{teamId}")
+    @Operation(summary = "매칭 요청 내역 조회", description = "특정 팀의 본인들이 신청한 매칭 요청 내역을 조회한다.")
     public ResponseEntity<?> getMatchRequestList(
-            @RequestParam Long teamId
+            @PathVariable("teamId") Long teamId
     ) {
         List<MatchRequestResponse> result = matchRequestService.getMatchRequestList(teamId);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("매칭 요청 내역 조회", result));

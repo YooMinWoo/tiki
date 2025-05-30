@@ -98,17 +98,33 @@ public class MatchRequestServiceImpl implements MatchRequestService {
         // 리더인지 확인
         checkUtil.validateLeaderAuthority(userId, matchPost.getHostTeamId());
 
-        // 매칭 성공
-        if(decideStatus == DecideStatus.ACCEPTED) {
-            matchPost.approveMatch(matchRequest.getApplicantTeamId());
-        }
-        matchRequest.changeStatus(decideStatus.toMatchStatus());
-
         // 신청한 팀의 리더의 id 값 가져오기
         TeamUser teamUser = teamUserRepository.findByTeamIdAndTeamUserRole(matchRequest.getApplicantTeamId(), TeamUserRole.ROLE_LEADER);
 
         // 매칭 공고 올린 팀
         Team team = checkUtil.validateAndGetTeam(matchPost.getHostTeamId());
+
+        // 매칭 성공
+        matchRequest.changeStatus(decideStatus.toMatchStatus());
+
+        if(decideStatus == DecideStatus.ACCEPTED) {
+            matchPost.approveMatch(matchRequest.getApplicantTeamId());
+
+            // 현재 pending 상태인 모든 신청을 reject로 상태 변경하기
+            List<MatchRequest> matchRequestList = matchRequestRepository.findAllByMatchPostIdAndRequestStatus(matchPost.getId(), RequestStatus.PENDING);
+            for (MatchRequest request : matchRequestList) {
+                request.changeStatus(RequestStatus.REJECTED);
+
+                // 알림 전송
+                notificationRepository.save(Notification.builder()
+                                    .userId(request.getApplicantTeamId())
+                                    .notificationType(NotificationType.MATCHPOST)
+                                    .targetId(matchPost.getId())
+                                    .message(team.getTeamName() + "에서 매칭을 거절했습니다.")
+                                    .build()
+                );
+            }
+        }
 
         // 알림 전송
         Notification.NotificationBuilder builder = Notification.builder()

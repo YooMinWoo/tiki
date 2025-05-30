@@ -10,6 +10,8 @@ import com.example.tiki.global.exception.NotFoundException;
 import com.example.tiki.notifircation.repository.NotificationRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
+import com.example.tiki.recruitment.dto.RecruitmentCreateRequest;
+import com.example.tiki.recruitment.dto.RecruitmentDetailDto;
 import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
 import com.example.tiki.recruitment.dto.RecruitmentStatusVisible;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
@@ -215,6 +217,20 @@ public class RecuritmentSearchTest {
                 () -> recruitmentService.reopenRecruitmentPost(member.getId(), recruitment.getId()));
         assertThat(forbiddenException.getMessage()).isEqualTo("해당 작업을 수행할 권한이 없습니다.");
 
+    }
+
+    @Test
+    void 게시물_상세_조회(){
+        RecruitmentCreateRequest recruitmentCreateRequest = RecruitmentCreateRequest.builder()
+                .title("테스트 제목")
+                .content("테스트 내용")
+                .build();
+
+        recruitmentService.createRecruitmentPost(leader.getId(), team.getId(), recruitmentCreateRequest);
+
+        Recruitment recruitment = recruitmentRepository.findAll().get(0);
+        RecruitmentDetailDto recruitmentDetail = recruitmentService.getRecruitmentDetail(recruitment.getId());
+        System.out.println(recruitmentDetail);
     }
 
 }

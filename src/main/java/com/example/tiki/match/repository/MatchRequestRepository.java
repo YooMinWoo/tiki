@@ -16,4 +16,8 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
     List<MatchRequest> findByApplicantTeamId(Long teamId);
 
     Optional<MatchRequest> findByMatchPostIdAndApplicantTeamId(Long postId, Long teamId);
+
+    List<MatchRequest> findByMatchPostId(Long id);
+
+    List<MatchRequest> findAllByMatchPostIdAndRequestStatus(Long id, RequestStatus requestStatus);
 }
