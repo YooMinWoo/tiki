@@ -3,10 +3,7 @@ package com.example.tiki.recruitment.controller;
 import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.security.user.CustomUserDetails;
 import com.example.tiki.global.dto.ApiResponse;
-import com.example.tiki.recruitment.dto.RecruitmentCreateRequest;
-import com.example.tiki.recruitment.dto.RecruitmentSearchResultDto;
-import com.example.tiki.recruitment.dto.RecruitmentStatusVisible;
-import com.example.tiki.recruitment.dto.RecruitmentUpdateRequest;
+import com.example.tiki.recruitment.dto.*;
 import com.example.tiki.recruitment.service.RecruitmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -95,5 +92,11 @@ public class RecruitmentController {
 
     // 모집글 상세 조회
     @GetMapping("/{recruitmentId}")
+    @Operation(summary = "모집글 상세 조회", description = "모집글 상세 조회")
+    public ResponseEntity<?> getRecruitmentDetail(
+            @PathVariable("recruitmentId") Long recruitmentId) {
+        RecruitmentDetailDto recruitmentDetail = recruitmentService.getRecruitmentDetail(recruitmentId);
+        return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("모집글 상세 조회 success!", recruitmentDetail));
+    }
 
 }

@@ -7,6 +7,7 @@ import com.example.tiki.match.dto.*;
 import com.example.tiki.match.service.MatchPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class MatchPostController {
     @Operation(summary = "매칭글 생성", description = "팀 리더가 매칭글을 생성한다.")
     public ResponseEntity<?> createMatchPost(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestBody MatchPostRequest request
+            @Valid @RequestBody MatchPostRequest request
     ) {
         User user = customUserDetails.getUser();
         matchPostService.createMatchPost(user.getId(), request);

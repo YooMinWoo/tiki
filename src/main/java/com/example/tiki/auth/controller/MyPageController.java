@@ -30,6 +30,7 @@ public class MyPageController {
 
     // 내 승인 대기 조회
     @GetMapping("/teams/waiting")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @Operation(summary = "내 승인 대기 팀 조회", description = "현재 내가 승인 대기 상태인 팀 목록을 조회합니다.")
     public ResponseEntity<?> getMyWaiting(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         User user = customUserDetails.getUser();
@@ -39,6 +40,7 @@ public class MyPageController {
 
     // 내 팀 조회
     @GetMapping("/teams")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @Operation(summary = "내 팀 목록 조회", description = "현재 내가 소속된 팀 목록을 조회합니다.")
     public ResponseEntity<?> getMyTeams(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                         @RequestParam(value = "status", required = false) TeamStatusVisible teamStatusVisible) {
@@ -48,7 +50,7 @@ public class MyPageController {
         return ResponseEntity.ok(ApiResponse.success("내 팀 목록 조회", teamList));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/myPage")
     @Operation(summary = "마이페이지",
             description = "마이페이지 조회 API (로그인 했을 경우에만 접속 가능)"

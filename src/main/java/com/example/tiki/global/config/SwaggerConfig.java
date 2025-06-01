@@ -32,8 +32,8 @@ public class SwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("Guide Me API")
-                .description("Guide Me API입니다.")
+                .title("TIKI")
+                .description("축구팀 매칭/모집 플랫폿")
                 .version("1.0.0");
     }
 }

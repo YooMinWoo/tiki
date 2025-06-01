@@ -67,12 +67,4 @@ public class Scheduler {
         }
 
     }
-
-    // 매 10초마다 실행 (예: 10:10, 10:20, 10:30...)
-    @Scheduled(cron = "0/10 * * * * *")
-    public void test1() {
-        System.out.println("매 10초마다 실행");
-        // 작업 실행 로직
-    }
-
 }

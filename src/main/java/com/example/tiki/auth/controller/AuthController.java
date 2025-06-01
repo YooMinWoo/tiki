@@ -16,6 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +43,7 @@ public class AuthController {
     @Operation(summary = "이메일 중복확인",
             description = "이메일 중복확인 API"
     )
-    public ResponseEntity<?> checkEmailDuplicate(@RequestParam("email") String email) {
+    public ResponseEntity<?> checkEmailDuplicate(@NotBlank @Email @RequestParam("email") String email) {
         authService.checkEmailDuplicate(email);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("사용 가능한 이메일입니다!", null));
     }
@@ -58,9 +61,17 @@ public class AuthController {
                 3. 사용자 or 관리자 회원가입: `/api/auth/signup`, `/signup-admin`
                 
                 인증이 완료되지 않으면 회원가입은 실패합니다.
+                
+                📌 입력 조건:<br>
+                    - 이메일: 필수, 이메일 형식<br>
+                    - 비밀번호: 필수, 8~16자<br>
+                    - 이름: 필수<br>
+                    - 생년월일: 필수, yyyy-MM-dd, 과거 날짜<br>
+                    - 자기소개: 선택, 20~300자<br>
+                    - 이메일 푸시: 선택, true 또는 false
                 """
     )
-    public ResponseEntity<?> userSignup(@RequestBody UserSignupDto userSignupDto) {
+    public ResponseEntity<?> userSignup(@Valid @RequestBody UserSignupDto userSignupDto) {
         authService.signup(userSignupDto, Role.ROLE_USER, null);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("회원가입 성공!", null));
     }
@@ -78,9 +89,17 @@ public class AuthController {
                 4. 관리자 인증코드(adminCode 입력란) : admin-code
                 
                 인증이 완료되지 않으면 회원가입은 실패합니다.
+                
+                📌 입력 조건:<br>
+                    - 이메일: 필수, 이메일 형식<br>
+                    - 비밀번호: 필수, 8~16자<br>
+                    - 이름: 필수<br>
+                    - 생년월일: 필수, yyyy-MM-dd, 과거 날짜<br>
+                    - 자기소개: 선택, 20~300자<br>
+                    - 이메일 푸시: 선택, true 또는 false
                 """
     )
-    public ResponseEntity<?> adminSignup(@RequestBody AdminSignupDto adminSignupDto) {
+    public ResponseEntity<?> adminSignup(@Valid @RequestBody AdminSignupDto adminSignupDto) {
         authService.signup(adminSignupDto, Role.ROLE_ADMIN, adminSignupDto.getAdminCode());
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("회원가입 성공!", null));
     }
@@ -94,8 +113,8 @@ public class AuthController {
 
     @PostMapping("/email/verify")
     @Operation(summary = "인증번호 체크", description = "인증번호 일치 여부 API")
-    public ResponseEntity<?> verifyEmailCode(@RequestParam("email") String email,
-                                             @RequestParam("code") String code) {
+    public ResponseEntity<?> verifyEmailCode(@NotBlank @Email @RequestParam("email") String email,
+                                             @NotBlank @RequestParam("code") String code) {
         emailUtil.verifyCode(email,code);
         return ResponseEntity.ok(ApiResponse.success("인증 성공", null));
     }
@@ -108,8 +127,8 @@ public class AuthController {
                     주어진 access 토큰 값을 Authorize 버튼을 통해 입력하여주세요.
                     """
     )
-    public ResponseEntity<?> login(@RequestParam("email") String email,
-                                   @RequestParam("password") String password,
+    public ResponseEntity<?> login(@NotBlank @Email @RequestParam("email") String email,
+                                   @NotBlank @RequestParam("password") String password,
                                    HttpServletResponse response) {
         TokenDto tokenDto = authService.login(email, password);
 //        response.setHeader("Set-Cookie", tokenDto.getRefreshToken());
