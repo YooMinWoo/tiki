@@ -8,9 +8,9 @@ import com.example.tiki.match.domain.enums.MatchStatus;
 import com.example.tiki.match.domain.enums.RequestStatus;
 import com.example.tiki.match.repository.MatchPostRepository;
 import com.example.tiki.match.repository.MatchRequestRepository;
-import com.example.tiki.notion.domain.entity.Notion;
-import com.example.tiki.notion.domain.enums.NotionStatus;
-import com.example.tiki.notion.repository.NotionRepository;
+import com.example.tiki.notice.domain.entity.Notice;
+import com.example.tiki.notice.domain.enums.NoticeStatus;
+import com.example.tiki.notice.repository.NoticeRepository;
 import com.example.tiki.recruitment.domain.entity.Recruitment;
 import com.example.tiki.recruitment.domain.enums.RecruitmentStatus;
 import com.example.tiki.recruitment.repository.RecruitmentRepository;
@@ -33,7 +33,7 @@ public class CheckUtil {
     private final RecruitmentRepository recruitmentRepository;
     private final MatchPostRepository matchPostRepository;
     private final MatchRequestRepository matchRequestRepository;
-    private final NotionRepository notionRepository;
+    private final NoticeRepository noticeRepository;
 
     // 팀이 존재하는지 확인
     public Team validateAndGetTeam(Long teamId) {
@@ -44,11 +44,11 @@ public class CheckUtil {
     }
 
     // 공지사항이 존재하는지 확인
-    public Notion validateAndGetNotion(Long notionId) {
-        Notion notion = notionRepository.findById(notionId)
+    public Notice validateAndGetNotion(Long notionId) {
+        Notice notice = noticeRepository.findById(notionId)
                 .orElseThrow(() -> new NotFoundException("해당 공지사항은 존재하지 않습니다."));
-        if(notion.getNotionStatus() == NotionStatus.DELETED) throw new NotFoundException("해당 공지사항은 존재하지 않습니다.");
-        return notion;
+        if(notice.getNoticeStatus() == NoticeStatus.DELETED) throw new NotFoundException("해당 공지사항은 존재하지 않습니다.");
+        return notice;
     }
 
     // 모집글이 존재하는지 확인

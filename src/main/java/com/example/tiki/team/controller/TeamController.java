@@ -9,6 +9,7 @@ import com.example.tiki.team.dto.*;
 import com.example.tiki.team.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -80,7 +81,7 @@ public class TeamController {
             description = "팀 생성 API"
     )
     public ResponseEntity<?> createTeam(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                        @RequestBody TeamCreateRequestDto teamCreateRequestDto){
+                                        @Valid @RequestBody TeamCreateRequestDto teamCreateRequestDto){
         User user = customUserDetails.getUser();
         teamService.createTeam(user.getId(), teamCreateRequestDto);
         return ResponseEntity.status(HttpStatus.OK.value()).body(ApiResponse.success("팀 생성 success", null));

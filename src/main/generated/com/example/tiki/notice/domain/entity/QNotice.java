@@ -1,4 +1,4 @@
-package com.example.tiki.notion.domain.entity;
+package com.example.tiki.notice.domain.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -10,14 +10,14 @@ import com.querydsl.core.types.Path;
 
 
 /**
- * QNotion is a Querydsl query type for Notion
+ * QNotice is a Querydsl query type for Notice
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QNotion extends EntityPathBase<Notion> {
+public class QNotice extends EntityPathBase<Notice> {
 
-    private static final long serialVersionUID = -1048339931L;
+    private static final long serialVersionUID = -1937974779L;
 
-    public static final QNotion notion = new QNotion("notion");
+    public static final QNotice notice = new QNotice("notice");
 
     public final com.example.tiki.global.entity.QBaseEntity _super = new com.example.tiki.global.entity.QBaseEntity(this);
 
@@ -31,22 +31,22 @@ public class QNotion extends EntityPathBase<Notion> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> lastModifiedDate = _super.lastModifiedDate;
 
-    public final EnumPath<com.example.tiki.notion.domain.enums.NotionStatus> notionStatus = createEnum("notionStatus", com.example.tiki.notion.domain.enums.NotionStatus.class);
+    public final EnumPath<com.example.tiki.notice.domain.enums.NoticeStatus> noticeStatus = createEnum("noticeStatus", com.example.tiki.notice.domain.enums.NoticeStatus.class);
 
     public final StringPath title = createString("title");
 
     public final NumberPath<Long> userId = createNumber("userId", Long.class);
 
-    public QNotion(String variable) {
-        super(Notion.class, forVariable(variable));
+    public QNotice(String variable) {
+        super(Notice.class, forVariable(variable));
     }
 
-    public QNotion(Path<? extends Notion> path) {
+    public QNotice(Path<? extends Notice> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QNotion(PathMetadata metadata) {
-        super(Notion.class, metadata);
+    public QNotice(PathMetadata metadata) {
+        super(Notice.class, metadata);
     }
 
 }

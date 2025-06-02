@@ -27,6 +27,7 @@ import com.example.tiki.utils.CheckUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,8 @@ public class MatchPostServiceImpl implements MatchPostService {
     @Override
     @Transactional
     public void createMatchPost(Long userId, MatchPostRequest request) {
+        if(!request.getEndTime().isAfter(request.getStartTime())) throw new IllegalArgumentException("종료시간은 시작시간보다 앞설 수 없습니다.");
+
         // 팀이 존재하는지 확인
         Team team = checkUtil.validateAndGetTeam(request.getHostTeamId());
 

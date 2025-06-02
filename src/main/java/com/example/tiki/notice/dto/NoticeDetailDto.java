@@ -1,4 +1,4 @@
-package com.example.tiki.notion.dto;
+package com.example.tiki.notice.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class NotionDetailDto {
+public class NoticeDetailDto {
     private Long notionId;
     private Long writerId;
     private String writerName;

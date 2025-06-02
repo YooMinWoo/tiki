@@ -4,9 +4,7 @@ import com.example.tiki.match.domain.enums.MatchStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
 
@@ -33,10 +31,12 @@ public class MatchPostRequest {
     private String content;
 
     @NotNull(message = "경기 시작 시간은 필수입니다.")
+    @Future
     @Schema(description = "경기 시작 시각 , 예: 2025-06-01T08:00:00", example = "2025-06-01T08:00:00", required = true)
     private LocalDateTime startTime;
 
     @NotNull(message = "경기 종료 시간은 필수입니다.")
+    @Future
     @Schema(description = "경기 종료 시각 , 예: 2025-06-01T10:00:00", example = "2025-06-01T10:00:00", required = true)
     private LocalDateTime endTime;
 

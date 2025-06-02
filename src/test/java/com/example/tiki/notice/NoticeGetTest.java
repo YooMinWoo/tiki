@@ -1,13 +1,13 @@
-package com.example.tiki.notion;
+package com.example.tiki.notice;
 
 import com.example.tiki.auth.domain.Role;
 import com.example.tiki.auth.domain.User;
 import com.example.tiki.auth.repository.AuthRepository;
-import com.example.tiki.notion.domain.entity.Notion;
-import com.example.tiki.notion.domain.enums.NotionStatus;
-import com.example.tiki.notion.dto.*;
-import com.example.tiki.notion.repository.NotionRepository;
-import com.example.tiki.notion.service.NotionService;
+import com.example.tiki.notice.domain.entity.Notice;
+import com.example.tiki.notice.domain.enums.NoticeStatus;
+import com.example.tiki.notice.dto.*;
+import com.example.tiki.notice.repository.NoticeRepository;
+import com.example.tiki.notice.service.NoticeService;
 import com.example.tiki.team.domain.entity.Team;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,16 +21,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-public class NotionGetTest {
+public class NoticeGetTest {
 
     @Autowired
     private AuthRepository authRepository;
 
     @Autowired
-    private NotionRepository notionRepository;
+    private NoticeRepository noticeRepository;
 
     @Autowired
-    private NotionService notionService;
+    private NoticeService noticeService;
 
     private User admin;
     private User member;
@@ -57,15 +57,15 @@ public class NotionGetTest {
     @Test
     void 공지사항_목록_조회_성공() throws InterruptedException {
         for(int i=1; i<=15; i++){
-            Notion.NotionBuilder builder = Notion.builder();
+            Notice.NoticeBuilder builder = Notice.builder();
             builder.userId(admin.getId())
                     .title("title - " + i)
                     .content("content - " + i);
-            if(i<=10) builder.notionStatus(NotionStatus.OPEN);
-            else builder.notionStatus(NotionStatus.DELETED);
-            Notion notion = builder.build();
+            if(i<=10) builder.noticeStatus(NoticeStatus.OPEN);
+            else builder.noticeStatus(NoticeStatus.DELETED);
+            Notice notice = builder.build();
 
-            notionRepository.save(notion);
+            noticeRepository.save(notice);
             Thread.sleep(1);
         }
 
@@ -73,29 +73,29 @@ public class NotionGetTest {
         // 키워드 입력 keyword = "1", 정렬 X
         // 키워드 입력 X, 정렬 오래된 순
         // 키워드 입력 keyword = "1", 정렬 오래된 순
-        SearchNotionCondition condition1 = SearchNotionCondition.builder()
+        SearchNoticeCondition condition1 = SearchNoticeCondition.builder()
                 .build();
-        SearchNotionCondition condition2 = SearchNotionCondition.builder()
+        SearchNoticeCondition condition2 = SearchNoticeCondition.builder()
                 .keyword("1")
                 .build();
-        SearchNotionCondition condition3 = SearchNotionCondition.builder()
-                .sortType(NotionSortType.OLDEST)
+        SearchNoticeCondition condition3 = SearchNoticeCondition.builder()
+                .sortType(NoticeSortType.OLDEST)
                 .build();
-        SearchNotionCondition condition4 = SearchNotionCondition.builder()
+        SearchNoticeCondition condition4 = SearchNoticeCondition.builder()
                 .keyword("1")
-                .sortType(NotionSortType.OLDEST)
+                .sortType(NoticeSortType.OLDEST)
                 .build();
-        List<NotionListDto> notionList1 = notionService.getNotionList(condition1);
-        List<NotionListDto> notionList2 = notionService.getNotionList(condition2);
-        List<NotionListDto> notionList3 = notionService.getNotionList(condition3);
-        List<NotionListDto> notionList4 = notionService.getNotionList(condition4);
+        List<NoticeListDto> notionList1 = noticeService.getNotionList(condition1);
+        List<NoticeListDto> notionList2 = noticeService.getNotionList(condition2);
+        List<NoticeListDto> notionList3 = noticeService.getNotionList(condition3);
+        List<NoticeListDto> notionList4 = noticeService.getNotionList(condition4);
 
         assertThat(notionList1.size()).isEqualTo(10);
         assertThat(notionList2.size()).isEqualTo(2);
         assertThat(notionList3.size()).isEqualTo(10);
         assertThat(notionList4.size()).isEqualTo(2);
 
-        for(NotionListDto dto : notionList1){
+        for(NoticeListDto dto : notionList1){
             System.out.println(dto);
         }
 
@@ -107,16 +107,16 @@ public class NotionGetTest {
 
     @Test
     void 공지사항_세부_조회_성공() {
-        Notion notion = Notion.builder()
+        Notice notice = Notice.builder()
                 .userId(admin.getId())
                 .title("테스트 title")
                 .content("테스트 content")
-                .notionStatus(NotionStatus.OPEN)
+                .noticeStatus(NoticeStatus.OPEN)
                 .build();
 
-        notionRepository.save(notion);
+        noticeRepository.save(notice);
 
-        NotionDetailDto notionDetail = notionService.getNotionDetail(notion.getId());
+        NoticeDetailDto notionDetail = noticeService.getNotionDetail(notice.getId());
 
         assertThat(notionDetail.getTitle()).isEqualTo("테스트 title");
         assertThat(notionDetail.getContent()).isEqualTo("테스트 content");

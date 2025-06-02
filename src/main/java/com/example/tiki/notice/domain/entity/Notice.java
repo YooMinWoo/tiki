@@ -1,8 +1,8 @@
-package com.example.tiki.notion.domain.entity;
+package com.example.tiki.notice.domain.entity;
 
 import com.example.tiki.global.entity.BaseEntity;
-import com.example.tiki.notion.domain.enums.NotionStatus;
-import com.example.tiki.notion.dto.CreateNotionRequest;
+import com.example.tiki.notice.domain.enums.NoticeStatus;
+import com.example.tiki.notice.dto.CreateNoticeRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -13,7 +13,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class Notion extends BaseEntity {
+public class Notice extends BaseEntity {
 
     // id, 타이틀, 내용, 상태, 작성자
 
@@ -28,16 +28,16 @@ public class Notion extends BaseEntity {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    private NotionStatus notionStatus;
+    private NoticeStatus noticeStatus;
 
 
 
-    public void update(CreateNotionRequest request){
+    public void update(CreateNoticeRequest request){
         title = request.getTitle();
         content = request.getContent();
     }
 
     public void delete(){
-        this.notionStatus = NotionStatus.DELETED;
+        this.noticeStatus = NoticeStatus.DELETED;
     }
 }
