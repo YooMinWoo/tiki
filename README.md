@@ -70,6 +70,64 @@
 * 주소 → 좌표 변환 (Kakao 지도 API)
 * 게시글 및 팀 정보 유효성 검증 (javax.validation)
 
+---
+
+### API 명세서
+
+### 알림 API
+
+![Image](https://github.com/user-attachments/assets/5e7ffcf6-f7ea-4f5d-83cf-006c81aa62f3)
+
+---
+
+### 회원 API
+
+![Image](https://github.com/user-attachments/assets/487e5a4d-9245-4a3d-acf7-00f2d35ecc1e)
+
+---
+
+### 공지사항 API
+
+![Image](https://github.com/user-attachments/assets/773e8eb8-2087-4ee9-b77c-45493878e587)
+
+---
+
+### 팀 API
+
+![Image](https://github.com/user-attachments/assets/313a95c2-f461-4c3f-9975-91d7c935f8f0)
+
+---
+
+### 매칭 신청 API
+
+![Image](https://github.com/user-attachments/assets/d5a8923b-e392-4752-a946-77f9c53ba21d)
+
+---
+
+### 매칭 게시글 API
+
+![Image](https://github.com/user-attachments/assets/e308e1c4-3d2b-4025-975b-0ea84810eb50)
+
+---
+
+### 팔로우 API
+
+![Image](https://github.com/user-attachments/assets/c215631b-c98d-44c8-849f-1d6eb1219624)
+
+---
+
+### 모집글 API
+
+![Image](https://github.com/user-attachments/assets/d9cdcc14-9376-4759-83da-c47b457589fc)
+
+---
+### 기타 로직 및 코드
+![Image](https://github.com/user-attachments/assets/87bc8ac7-bf24-4ed0-a6cc-6c98327cc475)
+회원가입 로직
+
+![Image](https://github.com/user-attachments/assets/5b493c7c-3817-4789-aef7-60f10c5fcb1e)
+
+이메일 전송 및 Redis 저장
 
 
 ## 📎 포트폴리오 & 연락처
